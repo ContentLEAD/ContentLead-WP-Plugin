@@ -271,7 +271,7 @@ class NewsItem	{
 		if(empty($this->text)){
 			$xh = $this->getFullNewsXML();
 			$this->text = $xh->getValue(TEXT);
-			if(empty($this->text))throw new XMLNodeException("Element " . TEXT . " for " . NEWS_LIST_ITEM . " with id: " . $this->id . "<br />\n");
+			//if(empty($this->text))throw new XMLNodeException("Element " . TEXT . " for " . NEWS_LIST_ITEM . " with id: " . $this->id . "<br />\n");
 		}
 		return $this->text;
 	}
