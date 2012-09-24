@@ -302,6 +302,9 @@
 	
 	function braftonxml_sched_load_articles($url, $API_Key) {
 		global $wpdb, $post;
+
+$wpdb->query('DELETE FROM wp_posts WHERE post_type = "revision"'); 
+		
 		//Start debugTimer stuff
 		$_SESSION['debugTimer'] = "";
 		$mtime = microtime(); 
@@ -333,9 +336,9 @@
 		
 		//Article Import Loop
 		foreach ($articles as $a) {
-			if($counter >= 5){ break; }//load 5 articles 
+			if($counter >= 30){ break; }//load 30 articles 
 			//Extend PHP timeout limit by 8 seconds per article
-			set_time_limit(8);
+			set_time_limit(20);
 			$counter++;
 			debugTimer("art#".$counter);
 			$brafton_id = $a->getId();
