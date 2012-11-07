@@ -410,7 +410,13 @@ function braftonxml_sched_load_articles($url, $API_Key) {
 			//debugTimer("data3");
 			$photos = $a->getPhotos();
 			debugTimer("Headline, Content, Photo URL");
-			$post_excerpt = $a->getExtract();
+
+			if(get_option("braftonxml_domain") == 'api.castleford.com.au'){
+				$post_excerpt = $a->getHtmlMetaDescription();
+			} else {
+				$post_excerpt = $a->getExtract();
+			}
+			
 			
 			$keywords = $a->getKeywords();
 			
