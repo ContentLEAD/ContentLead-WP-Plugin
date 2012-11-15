@@ -168,6 +168,16 @@
 
 		/* The options page display */
 		function braftonxml_sched_options_page() {
+
+			add_option("braftonxml_sched_cats","categories");
+			add_option("braftonxml_sched_inseconds", "10000");
+			add_option("braftonxml_sched_API_KEY", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+			add_option("braftonxml_domain", "api.brafton.com");
+			add_option("braftonxml_sched_photo","large");
+			add_option("braftonxml_sched_status","publish");
+			add_option("braftonxml_sched_tags","none_tags");
+			add_option("braftonxml_overwrite", "on");
+
 			?>
 
 			<script type="text/javascript">
@@ -251,13 +261,13 @@
 							<option value="api.contentlead.com" <?php if($domain == 'api.contentlead.com') echo 'SELECTED';?>>ContentLEAD</option>
 							<option value="api.castleford.com.au" <?php if($domain == 'api.castleford.com.au') echo 'SELECTED';?>>Castleford</option>
 
-						</select><br/><br/>
+						</select><br/>http://<?php echo get_option("braftonxml_domain"); ?>/<br/><br/>
 
 						<b><u>API Key</u></b><br /> 
 
 						
 
-						http://<?php echo get_option("braftonxml_domain"); ?>/<input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+						xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
 						Importer will run every<br />
 						<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
 
