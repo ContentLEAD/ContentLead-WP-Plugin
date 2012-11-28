@@ -136,6 +136,10 @@
 				update_option("braftonxml_overwrite",$_POST['braftonxml_overwrite']);
 			}
 
+			if(!empty($_POST['braftonxml_publishdate'])) {
+				update_option("braftonxml_publishdate",$_POST['braftonxml_publishdate']);
+			}
+
 			$feedSettings = array("url" => get_option("braftonxml_sched_url"), "API_Key" => get_option("braftonxml_sched_API_KEY"));
 			if(!empty($_POST['braftonxml_sched_stop'])) {
 				$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
@@ -169,6 +173,8 @@
 		/* The options page display */
 		function braftonxml_sched_options_page() {
 
+
+
 			add_option("braftonxml_sched_cats","categories");
 			add_option("braftonxml_sched_inseconds", "10000");
 			add_option("braftonxml_sched_API_KEY", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
@@ -177,6 +183,7 @@
 			add_option("braftonxml_sched_status","publish");
 			add_option("braftonxml_sched_tags","none_tags");
 			add_option("braftonxml_overwrite", "on");
+			add_option("braftonxml_publishdate", "on");
 
 			?>
 
@@ -233,9 +240,11 @@
 
 					if($_GET['debug'] == 1){
 						echo "<a href='".$_SERVER['REQUEST_URI'] . "&debug=0'>Debug Display</a><br/>";
+						error_reporting(-1);
 						echo $_SESSION['debugTimer'];
 					} else {
 						echo "<a href='".$_SERVER['REQUEST_URI'] . "&debug=1'>Debug Display</a><br/>";
+						error_reporting(0);
 					}
 
 					?>
@@ -335,6 +344,13 @@
 				<input type="radio" name="braftonxml_overwrite" value="on" <?php if (get_option("braftonxml_overwrite") == 'on') { print 'checked'; }?> /> On<br />
 				<input type="radio" name="braftonxml_overwrite" value="off" <?php if (get_option("braftonxml_overwrite") == 'off') { print 'checked'; } ?>/> Off<br />
 
+				<br />
+
+				<b><u>Set date to: Publish Date or Last Modified Date</u></b><br />        
+				<font size="-2"><i>If option set to "On," posts will be imported with the listed "Publish Date", not the listed "Last Modified Date".</i></font><br />
+				<input type="radio" name="braftonxml_publishdate" value="on" <?php if (get_option("braftonxml_publishdate") == 'on') { print 'checked'; }?> /> Publish Date<br />
+				<input type="radio" name="braftonxml_publishdate" value="off" <?php if (get_option("braftonxml_publishdate") == 'off') { print 'checked'; } ?>/> Last Modified Date<br />
+
 				<br /> 
 
 			</div><!--Advanced Options-->
@@ -352,8 +368,6 @@
 
 function braftonxml_sched_load_articles($url, $API_Key) {
 	global $wpdb, $post;
-
-	$wpdb->query('DELETE FROM wp_posts WHERE post_type = "revision"'); 
 
 		//Start debugTimer stuff
 	$_SESSION['debugTimer'] = "";
@@ -411,8 +425,12 @@ function braftonxml_sched_load_articles($url, $API_Key) {
 				} 
 			}
 
-
-			$date = $a->getPublishDate();
+			if(get_option('braftonxml_publishdate') == 'on'){
+				$date = $a->getPublishDate();
+			} else {
+				$date = $a->getLastModifiedDate();
+			}
+			
 			
 			$post_title = $a->getHeadline();
 			//debugTimer("data2");
@@ -759,6 +777,13 @@ function image_update($id, $image_id){
 				meta_value = '%d'", 
 				$brafton_id);
 			$post_id = $wpdb->get_var($query);
+
+			//Delete all revisions on Brafton content - the plugin tends to bloat the DB with unneeded revisions
+			if($post_id != null) {
+				$wpdb->query('DELETE FROM $wpdb->posts WHERE post_type = "revision" AND ID='.$post_id);
+				debugTimer("Deleted revisions on post ID ".$post_id);
+			}
+
 			return $post_id;
 		}
 
