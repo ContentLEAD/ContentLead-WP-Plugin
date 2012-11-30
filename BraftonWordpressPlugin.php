@@ -709,6 +709,12 @@ function braftonxml_sched_load_articles($url, $API_Key) {
 				add_post_meta($post_id, '_aioseop_keywords', $keywords, true);
 			}
 
+			//Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
+			if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+				add_post_meta($post_id, '  _yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, ' _yoast_wpseo_metadesc', $post_excerpt, true);
+			}
+
 			if($local_image_path){
 				$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
 				$attachment = array(
