@@ -191,11 +191,11 @@
 			<script type="text/javascript">
 			function hideshow(which){
 				if (!document.getElementById)
-					return
+					return;
 				if (which.style.display=="block")
-					which.style.display="none"
+					which.style.display="none";
 				else
-					which.style.display="block"
+					which.style.display="block";
 			}
 			</script>
 
@@ -396,13 +396,13 @@ function braftonxml_sched_load_articles($url, $API_Key) {
 		}
 	}
 
-	$catDefsObj = $fh->getCategoryDefinitions();
+/*	$catDefsObj = $fh->getCategoryDefinitions();
 
 	foreach($catDefsObj as $catDef){
 		$catDefs[] = $wpdb->escape($catDef->getName());
 		
 	}
-	wp_create_categories($catDefs);
+	wp_create_categories($catDefs);*/
 	
 	$article_count = count($articles);
 	set_magic_quotes_runtime(0);
