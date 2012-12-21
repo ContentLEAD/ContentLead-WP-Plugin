@@ -141,6 +141,18 @@
 				update_option("braftonxml_publishdate",$_POST['braftonxml_publishdate']);
 			}
 
+			if(!empty($_POST['braftonxml_video'])) {
+				update_option("braftonxml_video",$_POST['braftonxml_video']);
+			}
+
+			if(!empty($_POST['braftonxml_videoPublic'])) {
+				update_option("braftonxml_videoPublic",$_POST['braftonxml_videoPublic']);
+			}
+
+			if(!empty($_POST['braftonxml_videoSecret'])) {
+				update_option("braftonxml_videoSecret",$_POST['braftonxml_videoSecret']);
+			}
+
 			$feedSettings = array("url" => get_option("braftonxml_sched_url"), "API_Key" => get_option("braftonxml_sched_API_KEY"));
 			if(!empty($_POST['braftonxml_sched_stop'])) {
 				$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
@@ -185,6 +197,10 @@
 			add_option("braftonxml_sched_tags","none_tags");
 			add_option("braftonxml_overwrite", "on");
 			add_option("braftonxml_publishdate", "on");
+
+			add_option("braftonxml_video", "off");
+			add_option("braftonxml_videoPublic", "xxxxx");
+			add_option("braftonxml_videoSecret", "xxxxx");
 
 			?>
 
@@ -275,7 +291,7 @@
 
 						<b><u>API Key</u></b><br /> 
 
-						
+
 
 						xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
 						Importer will run every<br />
@@ -354,6 +370,20 @@
 
 				<br /> 
 
+				<b><u>Brafton Video Integration</u></b><br />        
+				
+				<input type="radio" name="braftonxml_video" value="on" <?php if (get_option("braftonxml_video") == 'on') { print 'checked'; }?> /> Just Video<br />
+				<input type="radio" name="braftonxml_video" value="off" <?php if (get_option("braftonxml_video") == 'off') { print 'checked'; } ?>/> Just Articles<br />
+				<input type="radio" name="braftonxml_video" value="both" <?php if (get_option("braftonxml_video") == 'both') { print 'checked'; } ?>/> Both Articles and Video<br />
+				<br /> 
+				<b><u>Public Key</u></b><br />   
+				<input type="text" name="braftonxml_videoPublic" value="<?php echo get_option("braftonxml_videoPublic"); ?>" /><br />
+				<br /> 
+				<b><u>Private Key</u></b><br />   
+				<input type="text" name="braftonxml_videoSecret" value="<?php echo get_option("braftonxml_videoSecret"); ?>" /><br />
+				<br /> 
+
+
 			</div><!--Advanced Options-->
 			<br>
 			<br>
@@ -367,34 +397,144 @@
 <?php
 }
 
-function braftonxml_sched_load_articles($url, $API_Key) {
-	global $wpdb, $post;
+function braftonxml_sched_load_videos(){
+//Load Brafton Videos
+	require_once 'RCClientLibrary/AdferoArticlesVideoExtensions/AdferoVideoClient.php';
+	require_once 'RCClientLibrary/AdferoArticles/AdferoClient.php';
+	//Access Keys
+	$publicKey = get_option("braftonxml_videoPublic");
+	$secretKey = get_option("braftonxml_videoSecret");
 
-		//Start debugTimer stuff
-	$_SESSION['debugTimer'] = "";
-	$mtime = microtime(); 
-	$mtime = explode(" ",$mtime); 
-	$mtime = $mtime[1] + $mtime[0]; 
-	global $starttime;
-	$starttime = $mtime; 
-	debugTimer("Start");
-		//start cURL
-	$ch = curl_init();
+	$baseURL = 'http://api.video.brafton.com/v2/';
+	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
+	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
 
-		//Archive upload check
-	if($_FILES['archive']['tmp_name']) {
-		echo "Archive Option Selected<br/>";
-		$articles = NewsItem::getNewsList($_FILES['archive']['tmp_name'], "html");
+	$feeds = $client->Feeds();
+	$feedList = $feeds->ListFeeds(0,10);
 
-	} else {
-		if(preg_match("/\.xml$/", $API_Key)){
-			$articles = NewsItem::getNewsList($API_Key, 'news');
-		}
-		else {
-			$fh = new ApiHandler($API_Key, $url);
-			$articles = $fh->getNewsHTML();
+	$articles = $client->Articles();
+	$articleList = $articles->ListForFeed($feedList->items[0]->id,'live',0,100);
+	
+	$article_count = count($articleList);
+	set_magic_quotes_runtime(0);
+	$counter = 0;
+
+	$categories = $client->Categories();
+
+	echo "<pre>";
+
+		//Article Import Loop
+	foreach ($articleList->items as $article) {
+			if($counter >= 4){ break; }//load 30 articles 
+			//Extend PHP timeout limit by X seconds per article
+			set_time_limit(20);
+			$counter++;
+
+			$brafton_id = $article->id;
+
+
+			if(brafton_post_exists($brafton_id) ) {
+				continue;
+			} 
+
+			$post_id = brafton_post_exists($brafton_id);
+
+			$thisArticle = $client->Articles()->Get($brafton_id);
+			
+			$categoryId = $categories->ListForArticle($brafton_id,0,100)->items[0]->id;
+			$category = $categories->Get($categoryId);
+			
+			$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
+
+			$post_author = get_option("braftonxml_default_author", 1);
+
+			$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
+
+			$post_title = $thisArticle->fields['title'];
+
+			$post_excerpt = $thisArticle->fields['extract'];
+
+			$post_status = 'publish';
+
+			echo "</pre>";
+
+			$article = compact('post_author', 
+				'post_date', 
+				'post_date_gmt', 
+				'post_content', 
+				'post_title', 
+				'post_status', 
+				'post_excerpt');
+
+			$article['post_category'] = wp_create_categories($category->Name);   
+
+			$article['ID'] = $post_id;
+
+
+			
+			$post_id = wp_insert_post($article);
+			if ( is_wp_error( $post_id ) ){
+				return $post_id;
+			}
+			if (!$post_id) {
+				return;
+			}
+
+			add_post_meta($post_id, 'brafton_id', $brafton_id, true);
+
+				//All-in-One SEO Plugin integration
+			if(function_exists('aioseop_get_version')){
+				add_post_meta($post_id, '_aioseop_description', $post_excerpt, true);
+				add_post_meta($post_id, '_aioseop_keywords', $keywords, true);
+			}
+
+			//Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
+			if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+				add_post_meta($post_id, '  _yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, ' _yoast_wpseo_metadesc', $post_excerpt, true);
+			}
+
+
 		}
 	}
+
+	function braftonxml_sched_load_articles($url, $API_Key) {
+
+		if(get_option("braftonxml_video")=='on'){
+			braftonxml_sched_load_videos();
+			die();
+		} elseif(get_option("braftonxml_video") == 'both'){
+			braftonxml_sched_load_videos();
+		}
+
+
+		global $wpdb, $post;
+
+		//Start debugTimer stuff
+		$_SESSION['debugTimer'] = "";
+		$mtime = microtime(); 
+		$mtime = explode(" ",$mtime); 
+		$mtime = $mtime[1] + $mtime[0]; 
+		global $starttime;
+		$starttime = $mtime; 
+		debugTimer("Start");
+		//start cURL
+		$ch = curl_init();
+
+		//Archive upload check
+		if($_FILES['archive']['tmp_name']) {
+			echo "Archive Option Selected<br/>";
+			$articles = NewsItem::getNewsList($_FILES['archive']['tmp_name'], "html");
+
+		} else {
+			if(preg_match("/\.xml$/", $API_Key)){
+				$articles = NewsItem::getNewsList($API_Key, 'news');
+			}
+			else {
+				$fh = new ApiHandler($API_Key, $url);
+				$articles = $fh->getNewsHTML();
+			}
+		}
 
 /*	$catDefsObj = $fh->getCategoryDefinitions();
 
