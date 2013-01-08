@@ -636,7 +636,7 @@ function braftonxml_sched_load_videos(){
 				debugTimer("Photo Downloaded");
 			} 
 			
-			//if(!$post_image) $local_image_path = null;
+			if(!$post_image) $local_image_path = null;
 			
 			//$_SESSION['debugTimer'] .= $local_image_path."<br/>";
 			
