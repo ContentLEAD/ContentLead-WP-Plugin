@@ -20,7 +20,7 @@
 		add_action('delete_term', "brafton_category_delete");
 		add_action('delete_term', "brafton_tag_delete");
 
-		session_start();
+		//session_start();
 
 		function debugTimer($msg = "DebugTimer"){
 			global $starttime;
@@ -636,7 +636,7 @@ function braftonxml_sched_load_videos(){
 				debugTimer("Photo Downloaded");
 			} 
 			
-			if(!$post_image) $local_image_path = null;
+			//if(!$post_image) $local_image_path = null;
 			
 			//$_SESSION['debugTimer'] .= $local_image_path."<br/>";
 			
