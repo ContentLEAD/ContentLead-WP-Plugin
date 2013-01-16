@@ -30,7 +30,10 @@ class XMLHandler {
     curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, 60);
     $feed_string = curl_exec($ch);
     
-		if(!$this->doc->loadXML($feed_string)) throw new XMLLoadException($url);
+		if(!$this->doc->loadXML($feed_string)) {
+			echo $url."<br>";
+			throw new XMLLoadException($url);
+		}
 
 	}
   

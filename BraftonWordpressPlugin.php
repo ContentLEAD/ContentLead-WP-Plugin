@@ -401,13 +401,20 @@ function braftonxml_sched_load_videos(){
 //Load Brafton Videos
 	require_once 'RCClientLibrary/AdferoArticlesVideoExtensions/AdferoVideoClient.php';
 	require_once 'RCClientLibrary/AdferoArticles/AdferoClient.php';
+	require_once 'RCClientLibrary/AdferoPhotos/AdferoPhotoClient.php';
 	//Access Keys
 	$publicKey = get_option("braftonxml_videoPublic");
 	$secretKey = get_option("braftonxml_videoSecret");
 
 	$baseURL = 'http://api.video.brafton.com/v2/';
+	$photoURI = "http://pictures.directnews.co.uk/v2/";
 	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
+	$photoClient = new AdferoPhotoClient($photoURI);
+
+	$photos = $client->ArticlePhotos();
+	$scale_axis = 500;
+	$scale = 500;
 
 	$feeds = $client->Feeds();
 	$feedList = $feeds->ListFeeds(0,10);
@@ -428,7 +435,7 @@ function braftonxml_sched_load_videos(){
 			if($counter >= 4){ break; }//load 30 articles 
 			//Extend PHP timeout limit by X seconds per article
 			set_time_limit(20);
-			$counter++;
+			
 
 			$brafton_id = $article->id;
 
@@ -436,6 +443,10 @@ function braftonxml_sched_load_videos(){
 			if(brafton_post_exists($brafton_id) ) {
 				continue;
 			} 
+
+			$counter++;
+
+			$ch = curl_init();
 
 			$post_id = brafton_post_exists($brafton_id);
 
@@ -456,6 +467,8 @@ function braftonxml_sched_load_videos(){
 
 			$post_status = 'publish';
 
+			$post_date = $thisArticle->fields['lastModifiedDate'];
+
 			echo "</pre>";
 
 			$article = compact('post_author', 
@@ -466,7 +479,7 @@ function braftonxml_sched_load_videos(){
 				'post_status', 
 				'post_excerpt');
 
-			$article['post_category'] = wp_create_categories($category->Name);   
+			$article['post_category'] = array(wp_create_category($category->name));   
 
 			$article['ID'] = $post_id;
 
@@ -492,6 +505,40 @@ function braftonxml_sched_load_videos(){
 			if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
 				add_post_meta($post_id, '  _yoast_wpseo_title', $post_title, true);
 				add_post_meta($post_id, ' _yoast_wpseo_metadesc', $post_excerpt, true);
+			}
+
+
+			$thisPhotos = $photos->ListForArticle($brafton_id,0,100);
+			if(isset($thisPhotos->items[0]->id)) {		
+				$photoId = $photos->Get($thisPhotos->items[0]->id)->sourcePhotoId;
+				$photoURL = $photoClient->Photos()->GetScaleLocationUrl($photoId, $scale_axis, $scale)->locationUri;
+				$photoURL = strtok($photoURL, '?');
+				$photoCaption = $photos->Get($thisPhotos->items[0]->id)->fields['caption'];
+
+				$photoId = $thisPhotos->items[0]->id;
+				$upload_array = wp_upload_dir();
+				$master_image = image_download($upload_array, $photoURL, $post_date, $ch);
+				$local_image_path = $master_image[0];
+
+				if($local_image_path){
+						$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
+						$attachment = array(
+							'post_mime_type' => $wp_filetype['type'],
+							'post_title' => $photoCaption,
+							'post_excerpt' => $photoCaption,
+							'post_content' => $photoCaption,
+							'post_status' => 'inherit'
+							);
+
+							// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
+						$attach_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );                    
+						$attach_data = wp_generate_attachment_metadata( $attach_id, $local_image_path );
+						wp_update_attachment_metadata( $attach_id,  $attach_data );
+						add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
+						add_post_meta($post_id, 'pic_id', $image_id, true);
+					}	 
+
+
 			}
 
 
