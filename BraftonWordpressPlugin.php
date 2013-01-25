@@ -250,6 +250,7 @@
 					} else {
 						?>
 						<p>Content Importer is NOT scheduled!</p>
+						<p style="color:red;">This is likely due to another plugin utilizing the Wordpress Cron Scheduler</p>
 						<?php //braftonxml_sched_load_articles(get_option("braftonxml_sched_url")); ?>
 						<?php
 					}
