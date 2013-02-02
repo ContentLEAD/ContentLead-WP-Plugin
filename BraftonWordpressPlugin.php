@@ -118,12 +118,18 @@
 			if(!empty($_POST['braftonxml_sched_tags'])) {
 				update_option("braftonxml_sched_tags",$_POST['braftonxml_sched_tags']);
 			}
-			update_option("braftonxml_sched_tags_input",$_POST['braftonxml_sched_tags_input']);
+
+			if(!empty($_POST['braftonxml_sched_tags_input'])) {
+				update_option("braftonxml_sched_tags_input",$_POST['braftonxml_sched_tags_input']);
+			}
 
 			if(!empty($_POST['braftonxml_sched_cats'])) {
 				update_option("braftonxml_sched_cats",$_POST['braftonxml_sched_cats']);
 			}
-			update_option("braftonxml_sched_cats_input",$_POST['braftonxml_sched_cats_input']);
+			
+			if(!empty($_POST['braftonxml_sched_cats_input'])) {
+				update_option("braftonxml_sched_cats_input",$_POST['braftonxml_sched_cats_input']);
+			}
 
 			if(!empty($_POST['braftonxml_sched_photo'])) {
 				update_option("braftonxml_sched_photo",$_POST['braftonxml_sched_photo']);
@@ -196,7 +202,7 @@
 			add_option("braftonxml_sched_status","publish");
 			add_option("braftonxml_sched_tags","none_tags");
 			add_option("braftonxml_overwrite", "on");
-			add_option("braftonxml_publishdate", "on");
+			add_option("braftonxml_publishdate", "published");
 
 			add_option("braftonxml_video", "off");
 			add_option("braftonxml_videoPublic", "xxxxx");
@@ -218,7 +224,7 @@
 			<div class=wrap>
 				<h1>Content Importer</h1>
 				<?php if(!function_exists('curl_init')){
-					echo "<li>WARNING: <b>cURL</b> is diabled or not installed on your server. cURL is required for this plugin's operation.</li>";
+					echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
 				} ?>              
 
 				<div style="padding: 10px; border: 1px solid #cccccc;">
@@ -364,10 +370,11 @@
 
 				<br />
 
-				<b><u>Set date to: Publish Date or Last Modified Date</u></b><br />        
-				<font size="-2"><i>If option set to "On," posts will be imported with the listed "Publish Date", not the listed "Last Modified Date".</i></font><br />
-				<input type="radio" name="braftonxml_publishdate" value="on" <?php if (get_option("braftonxml_publishdate") == 'on') { print 'checked'; }?> /> Publish Date<br />
-				<input type="radio" name="braftonxml_publishdate" value="off" <?php if (get_option("braftonxml_publishdate") == 'off') { print 'checked'; } ?>/> Last Modified Date<br />
+				<b><u>Set date to: Publish, Last Modified or Created Date</u></b><br />        
+				<font size="-2"><i></i></font><br />
+				<input type="radio" name="braftonxml_publishdate" value="published" <?php if (get_option("braftonxml_publishdate") == 'published') { print 'checked'; }?> /> Publish Date<br />
+				<input type="radio" name="braftonxml_publishdate" value="modified" <?php if (get_option("braftonxml_publishdate") == 'modified') { print 'checked'; } ?>/> Last Modified Date<br />
+				<input type="radio" name="braftonxml_publishdate" value="created" <?php if (get_option("braftonxml_publishdate") == 'created') { print 'checked'; } ?>/> Created Date<br />
 
 				<br /> 
 
@@ -614,10 +621,23 @@ function braftonxml_sched_load_videos(){
 				} 
 			}
 
-			if(get_option('braftonxml_publishdate') == 'on'){
+			/*if(get_option('braftonxml_publishdate') == 'on'){
 				$date = $a->getPublishDate();
 			} else {
 				$date = $a->getLastModifiedDate();
+			}*/
+
+			//select date for article to be imported under
+			switch (get_option('braftonxml_publishdate')) {
+				case 'modified':
+					$date = $a->getLastModifiedDate();
+					break;
+				case 'created':
+					$date = $a->getCreatedDate();
+					break;
+				default:
+					$date = $a->getPublishDate();
+					break;
 			}
 			
 			
