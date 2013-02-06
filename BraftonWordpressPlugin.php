@@ -14,13 +14,9 @@
 		require_once(ABSPATH . 'wp-includes/post.php');
 		include_once 'SampleAPIClientLibrary/ApiHandler.php';
 
-
-
 		add_action('deactivate_BraftonWordpressPlugin/BraftonWordpressPlugin.php', 'braftonxml_sched_deactivate');
 		add_action('delete_term', "brafton_category_delete");
 		add_action('delete_term', "brafton_tag_delete");
-
-		//session_start();
 
 		function debugTimer($msg = "DebugTimer"){
 			global $starttime;
@@ -36,6 +32,30 @@
 			$_SESSION['debugTimer'] .= $msg."   ".$totaltime." sec (".$sinceLasttime.")<br/>"; 
 
 			$lasttime = $endtime;
+		}
+
+		function logMsg($msg){
+			$msg = date("m/d/Y : h:i:s A")." - ".$msg."\n";
+			$logLoc = logLoc();
+			if(file_put_contents($logLoc, $msg, FILE_APPEND) == false){
+				echo "<span style='color:red'>There was a problem writing to the log at ".$logLoc.", it is likely a file permissions issue.</span>";
+			}
+		}
+
+		function logLoc(){
+			return plugin_dir_path(__FILE__)."/log.txt";
+		}
+
+		function curPageURL() {
+			$pageURL = 'http';
+			if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+			$pageURL .= "://";
+			if ($_SERVER["SERVER_PORT"] != "80") {
+				$pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+			} else {
+				$pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+			}
+			return $pageURL;
 		}
 
 		function brafton_category_delete(){
@@ -159,6 +179,10 @@
 				update_option("braftonxml_videoSecret",$_POST['braftonxml_videoSecret']);
 			}
 
+			if(!empty($_POST['braftonxml_videoFeedNum'])) {
+				update_option("braftonxml_videoFeedNum",$_POST['braftonxml_videoFeedNum']);
+			}
+
 			$feedSettings = array("url" => get_option("braftonxml_sched_url"), "API_Key" => get_option("braftonxml_sched_API_KEY"));
 			if(!empty($_POST['braftonxml_sched_stop'])) {
 				$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
@@ -207,6 +231,7 @@
 			add_option("braftonxml_video", "off");
 			add_option("braftonxml_videoPublic", "xxxxx");
 			add_option("braftonxml_videoSecret", "xxxxx");
+			add_option("braftonxml_videoFeedNum", "0");
 
 			?>
 
@@ -240,8 +265,13 @@
 								echo 'Time now:'." \t\t\t".date(get_option('date_format'))." ".date("H:i:s")."<br />";
 								echo 'Schedule will be triggered:'." \t".date(get_option('date_format'),$timestamp)." ".date("H:i:s",$timestamp)."<br />";
 							}
+							$timestamp += 60;
+							if($timestamp<time()){
+								echo '<p style="color:red;">It appears there is an error with the cron scheduler.  This is likely due to another plugin utilizing the Wordpress Cron Scheduler</p>';
+								echo $timestamp."<".time();
+							}
 						}
-						?><a href="<?php bloginfo('wpurl') ?>/wp-admin/options-general.php?page=BraftonWordpressPlugin/BraftonWordpressPlugin.php">refresh</a><br />
+						?>
 					</pre>
 					<form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
 						<input type="submit" name="braftonxml_sched_stop" id="braftonxml_sched_stop" value="To turn off importer schedules" />
@@ -256,69 +286,71 @@
 					} else {
 						?>
 						<p>Content Importer is NOT scheduled!</p>
-						<p style="color:red;">This is likely due to another plugin utilizing the Wordpress Cron Scheduler</p>
 						<?php //braftonxml_sched_load_articles(get_option("braftonxml_sched_url")); ?>
 						<?php
 					}
 
-
-					if($_GET['debug'] == 1){
-						echo "<a href='".$_SERVER['REQUEST_URI'] . "&debug=0'>Debug Display</a><br/>";
-						error_reporting(-1);
-						echo $_SESSION['debugTimer'];
-					} else {
-						echo "<a href='".$_SERVER['REQUEST_URI'] . "&debug=1'>Debug Display</a><br/>";
-						error_reporting(0);
-					}
-
 					?>
+					<?php 
+					if(!isset($_GET['showLog']) || $_GET['showLog']==0){
+						$logURL=curPageURL().'&showLog=1';
+						?>
+						<a href="<?php echo $logURL; ?>">Display Log</a>
+						<?php }	else {
+							$filename = logLoc();
+							$handle = fopen($filename, "r");
+							if($handle == false) "<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
+							$contents = fread($handle, filesize($filename));
+							echo "<pre>".$contents."<pre>";
+							fclose($handle);
+						}	?>
 
-				</div>
-				<?php
-				if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
-					?>
-					<br />
-					<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-
-
-
-						<p><b>Set up a new import schedule</b></p><br />
-
-
-						<?php $domain = get_option("braftonxml_domain"); ?>
-
-
-						<b><u>API Domain</u></b><br />
-						<select name='braftonxml_domain'>
-							<option value="api.brafton.com" <?php if($domain == 'api.brafton.com') echo 'SELECTED';?>>Brafton</option>
-							<option value="api.contentlead.com" <?php if($domain == 'api.contentlead.com') echo 'SELECTED';?>>ContentLEAD</option>
-							<option value="api.castleford.com.au" <?php if($domain == 'api.castleford.com.au') echo 'SELECTED';?>>Castleford</option>
-
-						</select><br/>http://<?php echo get_option("braftonxml_domain"); ?>/<br/><br/>
-
-						<b><u>API Key</u></b><br /> 
-
-
-
-						xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-						Importer will run every<br />
-						<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
-
+					</div>
+					<?php
+					if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
+						?>
 						<br />
-						<br />                
-						<b><u>Post Author</u></b><br />                                       
-						<?php wp_dropdown_users(array('name' => 'braftonxml_default_author', 
-							'hide_if_only_one_author' => true,
-							'selected' => get_option("braftonxml_default_author", false)));
-							?>
+						<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+
+
+
+							<p><b>Set up a new import schedule</b></p><br />
+
+
+							<?php $domain = get_option("braftonxml_domain"); ?>
+
+
+							<b><u>API Domain</u></b><br />
+							<select name='braftonxml_domain'>
+								<option value="api.brafton.com" <?php if($domain == 'api.brafton.com') echo 'SELECTED';?>>Brafton</option>
+								<option value="api.contentlead.com" <?php if($domain == 'api.contentlead.com') echo 'SELECTED';?>>ContentLEAD</option>
+								<option value="api.castleford.com.au" <?php if($domain == 'api.castleford.com.au') echo 'SELECTED';?>>Castleford</option>
+
+							</select><br/>http://<?php echo get_option("braftonxml_domain"); ?>/<br/><br/>
+
+							<b><u>API Key</u></b><br /> 
+
+
+
+							xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+							Importer will run every<br />
+							<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
+
 							<br />
 							<br />                
-							<b><u>Categories</u></b><br />                                     
-							<input type="radio" name="braftonxml_sched_cats" value="categories" <?php if (get_option("braftonxml_sched_cats") == 'categories') { print 'checked'; }?> /> Brafton Categories<br />                
-							<input type="radio" name="braftonxml_sched_cats" value="none_cat" <?php if (get_option("braftonxml_sched_cats") == 'none_cat') { print 'checked'; }?> /> None<br />
-							<table>
-								<tr><td>Enter custom <b>categories</b>: <input type="text" name="braftonxml_sched_cats_input" value="<?php echo get_option("braftonxml_sched_cats_input", ""); ?>"/></td></tr>             
-								<tr><td><font size="-2"><i>Each category separated by a comma(first, second, third)</i></font></td></tr>
+							<b><u>Post Author</u></b><br />                                       
+							<?php wp_dropdown_users(array('name' => 'braftonxml_default_author', 
+								'hide_if_only_one_author' => true,
+								'selected' => get_option("braftonxml_default_author", false)));
+								?>
+								<br />
+								<br />                
+								<b><u>Categories</u></b><br />                                     
+								<input type="radio" name="braftonxml_sched_cats" value="categories" <?php if (get_option("braftonxml_sched_cats") == 'categories') { print 'checked'; }?> /> Brafton Categories<br />                
+								<input type="radio" name="braftonxml_sched_cats" value="none_cat" <?php if (get_option("braftonxml_sched_cats") == 'none_cat') { print 'checked'; }?> /> None<br />
+								<table>
+									<tr><td>Enter custom <b>categories</b>: <input type="text" name="braftonxml_sched_cats_input" value="<?php echo get_option("braftonxml_sched_cats_input", ""); ?>"/></td></tr>             
+									<tr><td><font size="-2"><i>Each category separated by a comma(first, second, third)</i></font></td></tr>
 					<!--  				<tr><td style="text-indent: 20px;"><i>Applied to all articles: </i><input type="radio" name="braftonxml_sched_cus_cat" value="all" <?php //if (get_option("braftonxml_sched_cus_cat") == 'all') { print 'checked'; }?> /></td></tr> 
 						<tr><td style="text-indent: 20px;"><i>Applied to no articles: </i> <input type="radio" name="braftonxml_sched_cus_cat" value="no" <?php //if (get_option("braftonxml_sched_cus_cat") == 'no') { print 'checked'; }?> /></td></tr> 
 					-->				 
@@ -390,6 +422,9 @@
 				<b><u>Private Key</u></b><br />   
 				<input type="text" name="braftonxml_videoSecret" value="<?php echo get_option("braftonxml_videoSecret"); ?>" /><br />
 				<br /> 
+				<b><u>Feed Number</u></b><br />   
+				<input type="text" name="braftonxml_videoFeedNum" value="<?php echo get_option("braftonxml_videoFeedNum"); ?>" /><br />
+				<br /> 
 
 
 			</div><!--Advanced Options-->
@@ -420,6 +455,8 @@ function braftonxml_sched_load_videos(){
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
 	$photoClient = new AdferoPhotoClient($photoURI);
 
+	$feedNum = get_option("braftonxml_videoFeedNum");
+
 	$photos = $client->ArticlePhotos();
 	$scale_axis = 500;
 	$scale = 500;
@@ -428,18 +465,18 @@ function braftonxml_sched_load_videos(){
 	$feedList = $feeds->ListFeeds(0,10);
 
 	$articles = $client->Articles();
-	$articleList = $articles->ListForFeed($feedList->items[0]->id,'live',0,100);
+	$articleList = $articles->ListForFeed($feedList->items[$feedNum]->id,'live',0,100);
 	
-	$article_count = count($articleList);
+	$article_count = count($articleList->items);
+
 	set_magic_quotes_runtime(0);
 	$counter = 0;
 
 	$categories = $client->Categories();
 
-	echo "<pre>";
-
 		//Article Import Loop
 	foreach ($articleList->items as $article) {
+		
 			if($counter >= 4){ break; }//load 30 articles 
 			//Extend PHP timeout limit by X seconds per article
 			set_time_limit(20);
@@ -449,6 +486,7 @@ function braftonxml_sched_load_videos(){
 
 
 			if(brafton_post_exists($brafton_id) ) {
+				
 				continue;
 			} 
 
@@ -457,16 +495,19 @@ function braftonxml_sched_load_videos(){
 			$ch = curl_init();
 
 			$post_id = brafton_post_exists($brafton_id);
+			
 
 			$thisArticle = $client->Articles()->Get($brafton_id);
 			
-			$categoryId = $categories->ListForArticle($brafton_id,0,100)->items[0]->id;
-			$category = $categories->Get($categoryId);
+			if($categories->ListForArticle($brafton_id,0,100)->items['totalCount']){
+				$categoryId = $categories->ListForArticle($brafton_id,0,100)->items[0]->id;
+				$category = $categories->Get($categoryId);
+			}
 			
 			$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 
 			$post_author = get_option("braftonxml_default_author", 1);
-
+			
 			$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
 
 			$post_title = $thisArticle->fields['title'];
@@ -477,8 +518,6 @@ function braftonxml_sched_load_videos(){
 
 			$post_date = $thisArticle->fields['lastModifiedDate'];
 
-			echo "</pre>";
-
 			$article = compact('post_author', 
 				'post_date', 
 				'post_date_gmt', 
@@ -487,11 +526,11 @@ function braftonxml_sched_load_videos(){
 				'post_status', 
 				'post_excerpt');
 
-			$article['post_category'] = array(wp_create_category($category->name));   
+			if($categories->ListForArticle($brafton_id,0,100)->items['totalCount']){
+				$article['post_category'] = array(wp_create_category($category->name));   
+			}
 
 			$article['ID'] = $post_id;
-
-
 			
 			$post_id = wp_insert_post($article);
 			if ( is_wp_error( $post_id ) ){
@@ -529,26 +568,27 @@ function braftonxml_sched_load_videos(){
 				$local_image_path = $master_image[0];
 
 				if($local_image_path){
-						$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
-						$attachment = array(
-							'post_mime_type' => $wp_filetype['type'],
-							'post_title' => $photoCaption,
-							'post_excerpt' => $photoCaption,
-							'post_content' => $photoCaption,
-							'post_status' => 'inherit'
-							);
+					$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
+					$attachment = array(
+						'post_mime_type' => $wp_filetype['type'],
+						'post_title' => $photoCaption,
+						'post_excerpt' => $photoCaption,
+						'post_content' => $photoCaption,
+						'post_status' => 'inherit'
+						);
 
 							// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
-						$attach_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );                    
-						$attach_data = wp_generate_attachment_metadata( $attach_id, $local_image_path );
-						wp_update_attachment_metadata( $attach_id,  $attach_data );
-						add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
-						add_post_meta($post_id, 'pic_id', $image_id, true);
-					}	 
+					$attach_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );                    
+					$attach_data = wp_generate_attachment_metadata( $attach_id, $local_image_path );
+					wp_update_attachment_metadata( $attach_id,  $attach_data );
+					add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
+					add_post_meta($post_id, 'pic_id', $image_id, true);
+				}	 
 
 
 			}
 
+			logMsg("vid:".$brafton_id."->".$post_id." success");
 
 		}
 	}
@@ -565,14 +605,6 @@ function braftonxml_sched_load_videos(){
 
 		global $wpdb, $post;
 
-		//Start debugTimer stuff
-		$_SESSION['debugTimer'] = "";
-		$mtime = microtime(); 
-		$mtime = explode(" ",$mtime); 
-		$mtime = $mtime[1] + $mtime[0]; 
-		global $starttime;
-		$starttime = $mtime; 
-		debugTimer("Start");
 		//start cURL
 		$ch = curl_init();
 
@@ -609,7 +641,6 @@ function braftonxml_sched_load_videos(){
 			//Extend PHP timeout limit by X seconds per article
 			set_time_limit(20);
 			$counter++;
-			debugTimer("Article #".$counter);
 			$brafton_id = $a->getId();
 			
 			
@@ -630,23 +661,22 @@ function braftonxml_sched_load_videos(){
 			//select date for article to be imported under
 			switch (get_option('braftonxml_publishdate')) {
 				case 'modified':
-					$date = $a->getLastModifiedDate();
-					break;
+				$date = $a->getLastModifiedDate();
+				break;
 				case 'created':
-					$date = $a->getCreatedDate();
-					break;
+				$date = $a->getCreatedDate();
+				break;
 				default:
-					$date = $a->getPublishDate();
-					break;
+				$date = $a->getPublishDate();
+				break;
 			}
 			
 			
 			$post_title = $a->getHeadline();
-			//debugTimer("data2");
+			
 			$post_content = $a->getText();
-			//debugTimer("data3");
+			
 			$photos = $a->getPhotos();
-			debugTimer("Headline, Content, Photo URL");
 
 			if(get_option("braftonxml_domain") == 'api.castleford.com.au'){
 				$post_excerpt = $a->getHtmlMetaDescription();
@@ -690,10 +720,10 @@ function braftonxml_sched_load_videos(){
 			$upload_array = wp_upload_dir();
 			//$img_exists = brafton_img_exists($image_id);
 			
-			//debugTimer("imgBeg '".$img_exists."/". $image_id ."'");
+			
 			/*if($img_exists) {
 				$local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-				debugTimer("noImg");
+				
 			}*/
 			
 			if ($post_image) {
@@ -701,12 +731,10 @@ function braftonxml_sched_load_videos(){
 				$master_image = image_download($upload_array, $post_image, $date, $ch);
 				$local_image_path = $master_image[0]; 
 				
-				debugTimer("Photo Downloaded");
+				
 			} 
 			
 			if(!$post_image) $local_image_path = null;
-			
-			//$_SESSION['debugTimer'] .= $local_image_path."<br/>";
 			
 			$post_id = brafton_post_exists($brafton_id);
 			$post_date;
@@ -790,7 +818,6 @@ function braftonxml_sched_load_videos(){
 			}   	        	
 			$article['post_category'] = wp_create_categories($categories);
 		}
-		debugTimer("Categories are in");
 
 			//tags 
 		if(($tag_option == 'tags') && ($custom_tags[0] != "")){
@@ -871,7 +898,6 @@ function braftonxml_sched_load_videos(){
 
 
 		if ($post_id){
-			debugTimer("post_id");
 			$article['ID'] = $post_id;
 			if (get_option("braftonxml_overwrite", "on") == on) {
 				wp_update_post($article);   
@@ -901,7 +927,6 @@ function braftonxml_sched_load_videos(){
 		}
 		else {
 				//insert new story
-			debugTimer("DB Begin Write");
 			$post_id = wp_insert_post($article);
 			if ( is_wp_error( $post_id ) ){
 				return $post_id;
@@ -932,22 +957,23 @@ function braftonxml_sched_load_videos(){
 					'post_excerpt' => $post_image_caption,
 					'post_content' => $post_image_caption					
 					);
-				//debugTimer("DB1");
+				
 					// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
 				$attach_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );  
-				//debugTimer("DB2");
+				
 				$attach_data = wp_generate_attachment_metadata( $attach_id, $local_image_path );
-				//debugTimer("DB3");
+				
 				wp_update_attachment_metadata( $attach_id,  $attach_data );
-				//debugTimer("DB4");
+				
 				add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
 
 				add_post_meta($post_id, 'pic_id', $image_id, true);
 			}     
 
 		}
-		debugTimer("end #".$counter);
-		$_SESSION['debugTimer'] .= "<br/>";
+
+		logMsg("Success ".$brafton_id."->".$post_id." : ".$post_title);
+		
 	}  
 }
 
@@ -996,7 +1022,6 @@ function image_update($id, $image_id){
 			//Delete all revisions on Brafton content - the plugin tends to bloat the DB with unneeded revisions
 			if($post_id != null) {
 				$wpdb->query('DELETE FROM $wpdb->posts WHERE post_type = "revision" AND ID='.$post_id);
-				debugTimer("Deleted revisions on post ID ".$post_id);
 			}
 
 			return $post_id;
