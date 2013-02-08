@@ -43,7 +43,27 @@
 		}
 
 		function logLoc(){
-			return plugin_dir_path(__FILE__)."/log.txt";
+			$loc = plugin_dir_path(__FILE__)."/log.txt";
+
+			$loc2 = plugin_dir_path(__FILE__)."log.txt";
+
+			if(get_option("braftonxml_log_loc")=="loc") return $loc;
+			if(get_option("braftonxml_log_loc")=="loc2") return $loc2;
+
+			$msg = "Establishing log.txt location\n";
+			if(file_put_contents($loc, $msg, FILE_APPEND) == false){
+
+				if(file_put_contents($loc, $msg, FILE_APPEND) == false){
+
+				} else {
+					update_option("braftonxml_log_loc","loc2");
+				}
+
+			} else {
+				update_option("braftonxml_log_loc","loc");
+			}
+			return $loc;
+
 		}
 
 		function curPageURL() {
