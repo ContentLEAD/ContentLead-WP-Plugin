@@ -35,7 +35,7 @@
 		}
 
 		function logMsg($msg){
-			$msg = date("m/d/Y : h:i:s A")." - ".$msg."\n";
+			$msg = date("m/d/Y h:i:s A")." - ".$msg."\n";
 			$logLoc = logLoc();
 			if(file_put_contents($logLoc, $msg, FILE_APPEND) == false){
 				echo "<span style='color:red'>There was a problem writing to the log at ".$logLoc.", it is likely a file permissions issue.</span>";
@@ -53,7 +53,7 @@
 			$msg = "Establishing log.txt location\n";
 			if(file_put_contents($loc, $msg, FILE_APPEND) == false){
 
-				if(file_put_contents($loc, $msg, FILE_APPEND) == false){
+				if(file_put_contents($loc2, $msg, FILE_APPEND) == false){
 
 				} else {
 					update_option("braftonxml_log_loc","loc2");
@@ -64,6 +64,16 @@
 			}
 			return $loc;
 
+		}
+
+		function clearLog(){
+			if(get_option("braftonxml_log_loc")=="loc") {
+				return plugin_dir_path(__FILE__)."/log".date("_m_d_Y__h_i_s").".txt";
+			}
+			if(get_option("braftonxml_log_loc")=="loc2") {
+				return plugin_dir_path(__FILE__)."log".date("_m_d_Y__h_i_s").".txt";
+			}
+			return false;
 		}
 
 		function curPageURL() {
@@ -325,52 +335,66 @@
 							fclose($handle);
 						}	?>
 
-					</div>
-					<?php
-					if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
-						?>
-						<br />
-						<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
 
+						<?php
+						if(!isset($_GET['clearLog']) || $_GET['clearLog']==0){
+							$logURL=curPageURL().'&clearLog=1';
+							?>
+							<a href="<?php echo $logURL; ?>">Clear Log</a>
+							<?php }	else {
+								$filename = logLoc();
+								$newName=clearLog();
+								if(rename($filename,$newName)==false) echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span>";
+							}	
 
+							?>
 
-							<p><b>Set up a new import schedule</b></p><br />
-
-
-							<?php $domain = get_option("braftonxml_domain"); ?>
-
-
-							<b><u>API Domain</u></b><br />
-							<select name='braftonxml_domain'>
-								<option value="api.brafton.com" <?php if($domain == 'api.brafton.com') echo 'SELECTED';?>>Brafton</option>
-								<option value="api.contentlead.com" <?php if($domain == 'api.contentlead.com') echo 'SELECTED';?>>ContentLEAD</option>
-								<option value="api.castleford.com.au" <?php if($domain == 'api.castleford.com.au') echo 'SELECTED';?>>Castleford</option>
-
-							</select><br/>http://<?php echo get_option("braftonxml_domain"); ?>/<br/><br/>
-
-							<b><u>API Key</u></b><br /> 
-
-
-
-							xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-							Importer will run every<br />
-							<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
-
+						</div>
+						<?php
+						if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
+							?>
 							<br />
-							<br />                
-							<b><u>Post Author</u></b><br />                                       
-							<?php wp_dropdown_users(array('name' => 'braftonxml_default_author', 
-								'hide_if_only_one_author' => true,
-								'selected' => get_option("braftonxml_default_author", false)));
-								?>
+							<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+
+
+
+								<p><b>Set up a new import schedule</b></p><br />
+
+
+								<?php $domain = get_option("braftonxml_domain"); ?>
+
+
+								<b><u>API Domain</u></b><br />
+								<select name='braftonxml_domain'>
+									<option value="api.brafton.com" <?php if($domain == 'api.brafton.com') echo 'SELECTED';?>>Brafton</option>
+									<option value="api.contentlead.com" <?php if($domain == 'api.contentlead.com') echo 'SELECTED';?>>ContentLEAD</option>
+									<option value="api.castleford.com.au" <?php if($domain == 'api.castleford.com.au') echo 'SELECTED';?>>Castleford</option>
+
+								</select><br/>http://<?php echo get_option("braftonxml_domain"); ?>/<br/><br/>
+
+								<b><u>API Key</u></b><br /> 
+
+
+
+								xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+								Importer will run every<br />
+								<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
+
 								<br />
 								<br />                
-								<b><u>Categories</u></b><br />                                     
-								<input type="radio" name="braftonxml_sched_cats" value="categories" <?php if (get_option("braftonxml_sched_cats") == 'categories') { print 'checked'; }?> /> Brafton Categories<br />                
-								<input type="radio" name="braftonxml_sched_cats" value="none_cat" <?php if (get_option("braftonxml_sched_cats") == 'none_cat') { print 'checked'; }?> /> None<br />
-								<table>
-									<tr><td>Enter custom <b>categories</b>: <input type="text" name="braftonxml_sched_cats_input" value="<?php echo get_option("braftonxml_sched_cats_input", ""); ?>"/></td></tr>             
-									<tr><td><font size="-2"><i>Each category separated by a comma(first, second, third)</i></font></td></tr>
+								<b><u>Post Author</u></b><br />                                       
+								<?php wp_dropdown_users(array('name' => 'braftonxml_default_author', 
+									'hide_if_only_one_author' => true,
+									'selected' => get_option("braftonxml_default_author", false)));
+									?>
+									<br />
+									<br />                
+									<b><u>Categories</u></b><br />                                     
+									<input type="radio" name="braftonxml_sched_cats" value="categories" <?php if (get_option("braftonxml_sched_cats") == 'categories') { print 'checked'; }?> /> Brafton Categories<br />                
+									<input type="radio" name="braftonxml_sched_cats" value="none_cat" <?php if (get_option("braftonxml_sched_cats") == 'none_cat') { print 'checked'; }?> /> None<br />
+									<table>
+										<tr><td>Enter custom <b>categories</b>: <input type="text" name="braftonxml_sched_cats_input" value="<?php echo get_option("braftonxml_sched_cats_input", ""); ?>"/></td></tr>             
+										<tr><td><font size="-2"><i>Each category separated by a comma(first, second, third)</i></font></td></tr>
 					<!--  				<tr><td style="text-indent: 20px;"><i>Applied to all articles: </i><input type="radio" name="braftonxml_sched_cus_cat" value="all" <?php //if (get_option("braftonxml_sched_cus_cat") == 'all') { print 'checked'; }?> /></td></tr> 
 						<tr><td style="text-indent: 20px;"><i>Applied to no articles: </i> <input type="radio" name="braftonxml_sched_cus_cat" value="no" <?php //if (get_option("braftonxml_sched_cus_cat") == 'no') { print 'checked'; }?> /></td></tr> 
 					-->				 
@@ -614,6 +638,7 @@ function braftonxml_sched_load_videos(){
 	}
 
 	function braftonxml_sched_load_articles($url, $API_Key) {
+		logMsg("Start Run");
 
 		if(get_option("braftonxml_video")=='on'){
 			braftonxml_sched_load_videos();
@@ -663,22 +688,17 @@ function braftonxml_sched_load_videos(){
 			$counter++;
 			$brafton_id = $a->getId();
 			
-			
-			if(brafton_post_exists($brafton_id) && get_option("braftonxml_overwrite") == 'off') {
+			$articleStatus="Imported";
+
+			if(brafton_post_exists($brafton_id)) {
 				//if the post exists and article edits will automatically overwrite 
 				if(get_option("braftonxml_sched_triggercount") % 10 != 0 ){
 					//Every ten importer runs do not skip anything
+					$articleStatus="Updated";
 					continue;
 				} 
 			}
 
-			/*if(get_option('braftonxml_publishdate') == 'on'){
-				$date = $a->getPublishDate();
-			} else {
-				$date = $a->getLastModifiedDate();
-			}*/
-
-			//select date for article to be imported under
 			switch (get_option('braftonxml_publishdate')) {
 				case 'modified':
 				$date = $a->getLastModifiedDate();
@@ -992,7 +1012,7 @@ function braftonxml_sched_load_videos(){
 
 		}
 
-		logMsg("Success ".$brafton_id."->".$post_id." : ".$post_title);
+		logMsg($articleStatus." ".$brafton_id."->".$post_id." : ".$post_title);
 		
 	}  
 }
