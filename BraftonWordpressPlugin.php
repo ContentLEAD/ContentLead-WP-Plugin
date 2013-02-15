@@ -584,7 +584,9 @@ function braftonxml_sched_load_videos(){
 				'post_status', 
 				'post_excerpt');
 
-			if($categories->ListForArticle($brafton_id,0,100)->items['totalCount']){
+			if(isset($categories->ListForArticle($brafton_id,0,100)->items[0]->id)){
+				$categoryId = $categories->ListForArticle($brafton_id,0,100)->items[0]->id;
+				$category = $categories->Get($categoryId);
 				$article['post_category'] = array(wp_create_category($category->name));   
 			}
 
