@@ -138,6 +138,11 @@
 			delete_option("braftonxml_domain");
 		}
 
+		add_action("init", "clear_crons_left");
+		function clear_crons_left() {
+			wp_clear_scheduled_hook("braftonxml_sched_hook");
+		}
+
 		/* Admin options page display function is called */
 		add_action('admin_menu', 'braftonxml_sched_add_admin_pages');
 		function braftonxml_sched_add_admin_pages() {
@@ -290,16 +295,20 @@
 						<p><b>Content importer is scheduled!</b></p>
 						<pre><?php
 						$crons = _get_cron_array();
+						$countCron = count($crons);
+						
 						foreach ( $crons as $timestamp => $cron ) {
 							if ( isset( $cron['braftonxml_sched_hook'] ) ) {
 								echo 'Time now:'." \t\t\t".date(get_option('date_format'))." ".date("H:i:s")."<br />";
 								echo 'Schedule will be triggered:'." \t".date(get_option('date_format'),$timestamp)." ".date("H:i:s",$timestamp)."<br />";
+								$timestamp += 60;
+								if($timestamp<time()){
+									echo '<p style="color:red;">It appears there is an error with the cron scheduler.  This is likely due to another of the <b>'.$countCron.'</b> plugins utilizing the Wordpress Cron Scheduler</p>';
+									//echo $timestamp."<".time();
+								}
+
 							}
-							$timestamp += 60;
-							if($timestamp<time()){
-								echo '<p style="color:red;">It appears there is an error with the cron scheduler.  This is likely due to another plugin utilizing the Wordpress Cron Scheduler</p>';
-								echo $timestamp."<".time();
-							}
+							
 						}
 						?>
 					</pre>
