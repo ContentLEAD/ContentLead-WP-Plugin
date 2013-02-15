@@ -37,12 +37,14 @@
 		function logMsg($msg){
 			$msg = date("m/d/Y h:i:s A")." - ".$msg."\n";
 			$logLoc = logLoc();
+			if($logLoc == false)return;
 			if(file_put_contents($logLoc, $msg, FILE_APPEND) == false){
 				echo "<span style='color:red'>There was a problem writing to the log at ".$logLoc.", it is likely a file permissions issue.</span>";
 			}
 		}
 
 		function logLoc(){
+			if(get_option("braftonxml_log_loc")=="none") return false;
 			$loc = plugin_dir_path(__FILE__)."/log.txt";
 
 			$loc2 = plugin_dir_path(__FILE__)."log.txt";
@@ -54,7 +56,7 @@
 			if(file_put_contents($loc, $msg, FILE_APPEND) == false){
 
 				if(file_put_contents($loc2, $msg, FILE_APPEND) == false){
-
+					update_option("braftonxml_log_loc","none");
 				} else {
 					update_option("braftonxml_log_loc","loc2");
 				}
@@ -533,10 +535,8 @@ function braftonxml_sched_load_videos(){
 			if($counter >= 4){ break; }//load 30 articles 
 			//Extend PHP timeout limit by X seconds per article
 			set_time_limit(20);
-			
 
 			$brafton_id = $article->id;
-
 
 			if(brafton_post_exists($brafton_id) ) {
 				
@@ -559,9 +559,14 @@ function braftonxml_sched_load_videos(){
 			
 			$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 
+			if(strpos($embedCode->embedCode, "adobe") < 30) continue;
+
+			//echo $embedCode->embedCode."<br><br><br>";
+
 			$post_author = get_option("braftonxml_default_author", 1);
-			
-			$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
+
+			//$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
+			$post_content = $thisArticle->fields['content'];
 
 			$post_title = $thisArticle->fields['title'];
 
@@ -592,6 +597,8 @@ function braftonxml_sched_load_videos(){
 			if (!$post_id) {
 				return;
 			}
+
+			add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>".$embedCode->embedCode."</div>", true);
 
 			add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 
