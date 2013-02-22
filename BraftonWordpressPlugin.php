@@ -572,7 +572,7 @@ function braftonxml_sched_load_videos(){
 
 			$post_excerpt = $thisArticle->fields['extract'];
 
-			$post_status = 'publish';
+			$post_status = get_option("braftonxml_sched_status", "publish");
 
 			$post_date = $thisArticle->fields['lastModifiedDate'];
 
