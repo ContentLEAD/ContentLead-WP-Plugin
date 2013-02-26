@@ -612,8 +612,8 @@ function braftonxml_sched_load_videos(){
 
 			//Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
 			if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
-				add_post_meta($post_id, '  _yoast_wpseo_title', $post_title, true);
-				add_post_meta($post_id, ' _yoast_wpseo_metadesc', $post_excerpt, true);
+				add_post_meta($post_id, '_yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 
 
@@ -1003,8 +1003,8 @@ function braftonxml_sched_load_videos(){
 
 			//Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
 			if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
-				add_post_meta($post_id, '  _yoast_wpseo_title', $post_title, true);
-				add_post_meta($post_id, ' _yoast_wpseo_metadesc', $post_excerpt, true);
+				add_post_meta($post_id, '_yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 
 			if($local_image_path){
