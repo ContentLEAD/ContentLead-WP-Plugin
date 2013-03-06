@@ -133,7 +133,6 @@
 
 		function braftonxml_sched_deactivate() {
 			delete_option("braftonxml_sched_url");
-			delete_option("braftonxml_sched_inseconds");
 			delete_option("braftonxml_sched_recc");
 			delete_option("braftonxml_sched_triggercount");
 			delete_option("braftonxml_sched_API_KEY");
@@ -225,22 +224,27 @@
 				$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
 				/* This is where the event gets unscheduled */
 				wp_unschedule_event($timestamp, "braftonxml_sched_hook", $feedSettings);
-			}
-			if(!empty($_POST['braftonxml_sched_inseconds'])) {
-				update_option("braftonxml_sched_inseconds",$_POST['braftonxml_sched_inseconds']);
+			} else {
 				/* This is where the actual recurring event is scheduled */
 				if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
-					wp_schedule_event(time()+$_POST['braftonxml_sched_inseconds'], "braftonxml_sched_recc", "braftonxml_sched_hook", $feedSettings);
+					braftonxml_clear_all_crons( 'braftonxml_sched_hook' );
+					wp_schedule_event(time()+3600, "hourly", "braftonxml_sched_hook", $feedSettings);
 					braftonxml_sched_trigger_schedule($feedSettings['url'],$feedSettings['API_Key']);
 				}
 			}
 		}
 
-		/* a reccurence has to be added to the cron_schedules array */
-		add_filter('cron_schedules', 'braftonxml_sched_more_reccurences');
-		function braftonxml_sched_more_reccurences($recc) {
-			$recc['braftonxml_sched_recc'] = array('interval' => get_option("braftonxml_sched_inseconds"), 'display' => 'XML Import Schedule');
-			return $recc;
+		function braftonxml_clear_all_crons( $hook ) {
+			$crons = _get_cron_array();
+			if ( empty( $crons ) ) {
+				return;
+			}
+			foreach( $crons as $timestamp => $cron ) {
+				if ( ! empty( $cron[$hook] ) )  {
+					unset( $crons[$timestamp][$hook] );
+				}
+			}
+			_set_cron_array( $crons );
 		}
 
 		/* This is the scheduling hook for our plugin that is triggered by cron */
@@ -256,7 +260,7 @@
 
 
 			add_option("braftonxml_sched_cats","categories");
-			add_option("braftonxml_sched_inseconds", "10000");
+			
 			add_option("braftonxml_sched_API_KEY", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
 			add_option("braftonxml_domain", "api.brafton.com");
 			add_option("braftonxml_sched_photo","large");
@@ -388,10 +392,9 @@
 
 
 								xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-								Importer will run every<br />
-								<input type="text" name="braftonxml_sched_inseconds" value="<?php echo get_option("braftonxml_sched_inseconds"); ?>" />seconds<br />
+								Importer will run every hour<br />
+								
 
-								<br />
 								<br />                
 								<b><u>Post Author</u></b><br />                                       
 								<?php wp_dropdown_users(array('name' => 'braftonxml_default_author', 
