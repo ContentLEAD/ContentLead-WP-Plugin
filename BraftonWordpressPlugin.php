@@ -1082,7 +1082,7 @@ function image_update($id, $image_id){
 
 			//Delete all revisions on Brafton content - the plugin tends to bloat the DB with unneeded revisions
 			if($post_id != null) {
-				$wpdb->query('DELETE FROM $wpdb->posts WHERE post_type = "revision" AND ID='.$post_id);
+				$wpdb->query("DELETE FROM $wpdb->posts WHERE post_type = 'revision' AND ID=".$post_id);
 			}
 
 			return $post_id;
