@@ -224,7 +224,8 @@
 				$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
 				/* This is where the event gets unscheduled */
 				wp_unschedule_event($timestamp, "braftonxml_sched_hook", $feedSettings);
-			} else {
+			} 
+			if(!empty($_POST['braftonxml_sched_submit'])) {
 				/* This is where the actual recurring event is scheduled */
 				if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
 					braftonxml_clear_all_crons( 'braftonxml_sched_hook' );
@@ -233,6 +234,20 @@
 				}
 			}
 		}
+
+		function braftonxml_admin_notice(){
+			$feedSettings = array("url" => get_option("braftonxml_sched_url"), "API_Key" => get_option("braftonxml_sched_API_KEY"));
+			if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings)) {
+				echo '<div class="error">
+				<p>Article Importer not enabled.</p>
+				</div>';
+			}
+		}
+
+		
+		add_action('admin_notices', 'braftonxml_admin_notice');
+		
+
 
 		function braftonxml_clear_all_crons( $hook ) {
 			$crons = _get_cron_array();
@@ -287,8 +302,45 @@
 			}
 			</script>
 
+			<style>
+			.awesomeButton {
+				background: #222 url(http://www.zurb.com/blog_uploads/0000/0617/alert-overlay.png) repeat-x;
+				display: inline-block;
+				padding: 5px 10px 6px;
+				color: #fff;
+				text-decoration: none;
+				font-weight: bold;
+				line-height: 1;
+				-moz-border-radius: 5px;
+				-webkit-border-radius: 5px;
+				-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+				-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+				text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
+				border-bottom: 1px solid #222;
+				position: relative;
+				cursor: pointer;
+				font-size: 14px;
+				padding: 8px 14px 9px;
+				border:none;
+			}
+
+			.awesomeButton:hover							{ background-color: #111; color: #fff; }
+			.awesomeButton:active							{ top: 1px; }
+
+			.redAwesomeButton{
+				background-color: #e33100;
+			}
+
+			.greenAwesomeButton{
+				background-color: #00BF32;
+			}
+			</style>
+
 			<div class=wrap>
 				<h1>Content Importer</h1>
+
+
+
 				<?php if(!function_exists('curl_init')){
 					echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
 				} ?>              
@@ -319,7 +371,7 @@
 						?>
 					</pre>
 					<form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-						<input type="submit" name="braftonxml_sched_stop" id="braftonxml_sched_stop" value="To turn off importer schedules" />
+						<input type="submit" name="braftonxml_sched_stop" id="braftonxml_sched_stop" class="awesomeButton redAwesomeButton" value="Disable Importer" />
 					</form>
 					<?php
 					if(get_option("braftonxml_sched_triggercount") > 0) {
@@ -328,13 +380,7 @@
 							<?php echo get_option("braftonxml_sched_triggercount");?> times.</p>
 							<?php
 						}
-					} else {
-						?>
-						<p>Content Importer is NOT scheduled!</p>
-						<?php //braftonxml_sched_load_articles(get_option("braftonxml_sched_url")); ?>
-						<?php
-					}
-
+					} 
 					?>
 					<?php 
 					if(!isset($_GET['showLog']) || $_GET['showLog']==0){
@@ -371,11 +417,8 @@
 							<br />
 							<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
 
-
-
-								<p><b>Set up a new import schedule</b></p><br />
-
-
+								<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
+								<br><br>
 								<?php $domain = get_option("braftonxml_domain"); ?>
 
 
@@ -391,8 +434,9 @@
 
 
 
-								xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx <input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-								Importer will run every hour<br />
+								<input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+								Example: 2de93ffd-280f-4d4b-9ace-be55db9ad4b7<br/>
+								<br/>Importer will run every hour<br />
 								
 
 								<br />                
@@ -488,7 +532,7 @@
 			</div><!--Advanced Options-->
 			<br>
 			<br>
-			<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" value="Set Import Schedule" />
+			<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
 
 		</form>
 		<?php
