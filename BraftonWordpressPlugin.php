@@ -161,7 +161,7 @@
 			}
 
 			if(!empty($_POST['braftonxml_sched_API_KEY'])) {
-				update_option("braftonxml_sched_API_KEY",$_POST['braftonxml_sched_API_KEY']);
+				update_option("braftonxml_sched_API_KEY",$_POST['braftonxml_sched_API_KEY']);				
 			}
 
 			if(!empty($_POST['braftonxml_domain'])) {
@@ -742,6 +742,7 @@ function braftonxml_sched_load_videos(){
 	wp_create_categories($catDefs);*/
 	
 	$article_count = count($articles);
+
 	set_magic_quotes_runtime(0);
 	$counter = 0;
 
@@ -1080,6 +1081,27 @@ function braftonxml_sched_load_videos(){
 		logMsg($articleStatus." ".$brafton_id."->".$post_id." : ".$post_title);
 		
 	}  
+	duplicateKiller();
+}
+
+function duplicateKiller(){
+	global $wpdb;
+	$allPosts = $wpdb->get_results($wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='post'",'null'));
+
+	foreach($allPosts as $post){
+		$thisTitle = $post->post_title;
+		foreach($allPosts as $postInner){
+			if($thisTitle == $postInner->post_title) $dupe++;
+			if($dupe >= 2) {
+				logMsg("Detected Dupe: ".$thisTitle);
+				$wpdb->query("DELETE FROM $wpdb->posts WHERE ID=".$postInner->ID);
+				unset($allPosts[$i]);
+			}
+			$i++;
+		}
+		$i=0;
+		$dupe=0;
+	}
 }
 
 function populate_postmeta($article_count, $post_id, $image_id){
