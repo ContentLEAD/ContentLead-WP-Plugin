@@ -1159,7 +1159,6 @@ function image_update($id, $image_id){
 			if($post_id != null) {
 				$wpdb->query("DELETE FROM $wpdb->posts WHERE post_type = 'revision' AND ID=".$post_id);
 			}
-			if(isset($post_id)) echo "post exists ".$post_id."<br>";
 
 			return $post_id;
 		}
