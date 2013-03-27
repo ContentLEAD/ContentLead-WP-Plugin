@@ -1146,10 +1146,20 @@ function image_update($id, $image_id){
 				$brafton_id);
 			$post_id = $wpdb->get_var($query);
 
+			$query = $wpdb->prepare("SELECT id FROM $wpdb->posts WHERE 
+				id = '%d'", 
+				$post_id);
+			$exists = $wpdb->get_var($query);
+
+			if(!isset($exists)) {
+				$wpdb->query("DELETE FROM $wpdb->postmeta WHERE meta_value = '".$brafton_id."'");
+			}
+
 			//Delete all revisions on Brafton content - the plugin tends to bloat the DB with unneeded revisions
 			if($post_id != null) {
 				$wpdb->query("DELETE FROM $wpdb->posts WHERE post_type = 'revision' AND ID=".$post_id);
 			}
+			if(isset($post_id)) echo "post exists ".$post_id."<br>";
 
 			return $post_id;
 		}
