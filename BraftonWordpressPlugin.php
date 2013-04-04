@@ -3,7 +3,7 @@
 		Plugin Name: Brafton API Article Loader
 		Plugin URI: http://www.brafton.com/support/wordpress
 		Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-		Version: 1.1.0
+		Version: 1.2.0
 		Author: Brafton, Inc.
 		Author URI: http://brafton.com/support/wordpress
 	*/
@@ -1081,7 +1081,7 @@ function braftonxml_sched_load_videos(){
 		logMsg($articleStatus." ".$brafton_id."->".$post_id." : ".$post_title);
 		
 	}  
-	duplicateKiller();
+	
 }
 
 function duplicateKiller(){
@@ -1153,14 +1153,14 @@ function image_update($id, $image_id){
 				$post_id);
 			$exists = $wpdb->get_var($query);
 
-			if(!isset($exists)) {
+			/*if(!isset($exists)) {
 				$wpdb->query("DELETE FROM $wpdb->postmeta WHERE meta_value = '".$brafton_id."'");
 			}
 
 			//Delete all revisions on Brafton content - the plugin tends to bloat the DB with unneeded revisions
 			if($post_id != null) {
 				$wpdb->query("DELETE FROM $wpdb->posts WHERE post_type = 'revision' AND ID=".$post_id);
-			}
+			}*/
 
 			return $post_id;
 		}
