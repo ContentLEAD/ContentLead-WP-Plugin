@@ -1087,15 +1087,17 @@ function braftonxml_sched_load_videos(){
 function duplicateKiller(){
 	global $wpdb;
 	$allPosts = $wpdb->get_results($wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='post'",'null'));
-
 	foreach($allPosts as $post){
 		$thisTitle = $post->post_title;
 		foreach($allPosts as $postInner){
 			if($thisTitle == $postInner->post_title) $dupe++;
 			if($dupe >= 2) {
-				logMsg("Detected Dupe: ".$thisTitle);
-				$wpdb->query("DELETE FROM $wpdb->posts WHERE ID=".$postInner->ID);
-				unset($allPosts[$i]);
+				$braftonId = get_post_meta($postInner->ID, 'brafton_id', $single);
+				if(isset($braftonId[0])) {
+					logMsg("Detected Dupe: ".$thisTitle);
+					$wpdb->query("DELETE FROM $wpdb->posts WHERE ID=".$postInner->ID);
+					unset($allPosts[$i]);
+				}
 			}
 			$i++;
 		}
