@@ -1144,7 +1144,7 @@ function image_update($id, $image_id){
 		function brafton_post_exists($brafton_id){
 			global $wpdb;
 			$query = $wpdb->prepare("SELECT post_id FROM $wpdb->postmeta WHERE 
-				meta_value = '%d'", 
+				meta_key = 'brafton_id' AND  meta_value = '%d'", 
 				$brafton_id);
 			$post_id = $wpdb->get_var($query);
 
