@@ -480,8 +480,9 @@
 				<div id='advancedOptions' style='display:none;border:thin solid #DFDFDF;padding:5px;'>
 
 					<b><u>Tags</u></b><br />                
-					<input type="radio" name="braftonxml_sched_tags" value="tags" <?php if (get_option("braftonxml_sched_tags") == 'tags') { print 'checked'; }?> /> Brafton Categories as tags <br />                      
+					<input type="radio" name="braftonxml_sched_tags" value="tags" <?php if (get_option("braftonxml_sched_tags") == 'tags') { print 'checked'; }?> /> Brafton Tags as tags<br />                    
 					<input type="radio" name="braftonxml_sched_tags" value="keywords" <?php if (get_option("braftonxml_sched_tags") == 'keywords') { print 'checked'; }?> /> Brafton Keywords as tags<br />
+					<input type="radio" name="braftonxml_sched_tags" value="cats" <?php if (get_option("braftonxml_sched_tags") == 'cats') { print 'checked'; }?> /> Brafton Categories as tags <br />  
 					<input type="radio" name="braftonxml_sched_tags" value="none_tags" <?php if (get_option("braftonxml_sched_tags") == 'none_tags') { print 'checked'; }?> /> None <br />
 					<table>
 						<tr><td> Enter custom <b>tags</b>: <input type="text" name="braftonxml_sched_tags_input" value="<?php echo get_option("braftonxml_sched_tags_input", ""); ?>"/><br /></td></tr>
@@ -877,11 +878,12 @@ function braftonxml_sched_load_videos(){
 			
 			//Category handling
 			//TODO: tag/category switching based on GUI
-			$tag_option = get_option("braftonxml_sched_tags", 'tags');
+			$tag_option = get_option("braftonxml_sched_tags", 'cats');
 			$cat_option = get_option("braftonxml_sched_cats");
 			$custom_cat = explode(",",get_option("braftonxml_sched_cats_input"));
 			$custom_tags = explode(",",get_option("braftonxml_sched_tags_input"));
 			$CatColl = $a->getCategories();
+			$TagColl = $a->getTags();
 			
 			
 			
@@ -926,7 +928,7 @@ function braftonxml_sched_load_videos(){
 		}
 
 			//tags 
-		if(($tag_option == 'tags') && ($custom_tags[0] != "")){
+		if(($tag_option == 'cats') && ($custom_tags[0] != "")){
 			foreach ($CatColl as $c){ 
 				$tags_input[] = $wpdb->escape($c->getName());        
 			}
@@ -958,7 +960,7 @@ function braftonxml_sched_load_videos(){
 			}   	     	      	    	    	     	
 			$article['tags_input'] = $tags_input;
 		}
-		elseif(($tag_option == 'tags') && ($custom_tags[0] == "")){    	
+		elseif(($tag_option == 'cats') && ($custom_tags[0] == "")){    	
 			foreach ($CatColl as $c){ 
 				$tags_input[] = $wpdb->escape($c->getName());        
 			}
@@ -1000,6 +1002,23 @@ function braftonxml_sched_load_videos(){
 				}   	     	      	    	    	     	
 				$article['tags_input'] = $tags_input;
 			}
+		}
+		elseif($tag_option == 'tags' && ($custom_tags[0] == "")){
+			$TagCollArray = explode(',', $TagColl);
+			foreach ($TagCollArray as $c){ 
+				$tags_input[] = $wpdb->escape($c);        
+			}
+			for($j = 0; $j < count($custom_tags); $j++){	     			
+				$tags_input[] = $custom_tags[$j];     							
+			}
+			$article['tags_input'] = $tags_input;     
+		}
+		elseif(($tag_option == 'tags') && ($custom_tags[0] == "")){    	
+			$TagCollArray = explode(',', $TagColl);
+			foreach ($TagCollArray as $c){ 
+				$tags_input[] = $wpdb->escape($c);        
+			}
+			$article['tags_input'] = $tags_input;
 		}
 
 
