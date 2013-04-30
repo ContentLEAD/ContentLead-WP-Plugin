@@ -263,7 +263,7 @@
 				'og:site_name' => get_bloginfo('name'),
 				'og:url' => curPageURL(),
 				'og:title' => preg_replace('/<.*?>/', '', get_the_title()),
-				'og:description' => preg_replace('/<.*?>/', '', get_the_excerpt()),
+				'og:description' => htmlspecialchars(preg_replace('/<.*?>/', '', get_the_excerpt())),
 				'og:image' => wp_get_attachment_url(get_post_thumbnail_id($post->ID)),
 				'article:published_time' => date('c', strtotime($post->post_date)),
 			);
