@@ -274,7 +274,13 @@
 		add_filter('language_attributes', 'braftonxml_inject_opengraph_namespaces');
 		function braftonxml_inject_opengraph_namespaces($content)
 		{
-			return ' xmlns:og="http://ogp.me/ns#" xmlns:article="http://ogp.me/ns/article#" ' . $content;
+			$namespaces = array('xmlns:og="http://ogp.me/ns#"', 'xmlns:article="http://ogp.me/ns/article#"');
+			
+			foreach ($namespaces as $ns)
+				if (strpos($content, $ns) === false)
+					$content .= ' ' . $ns;
+			
+			return trim($content);
 		}
 
 		
