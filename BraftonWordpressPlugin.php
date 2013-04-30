@@ -3,7 +3,7 @@
 		Plugin Name: Brafton API Article Loader
 		Plugin URI: http://www.brafton.com/support/wordpress
 		Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-		Version: 1.2.1
+		Version: 1.3.0
 		Author: Brafton, Inc.
 		Author URI: http://brafton.com/support/wordpress
 	*/
@@ -242,6 +242,46 @@
 				<p>Article Importer not enabled.</p>
 				</div>';
 			}
+		}
+		
+		add_action('wp_head', 'braftonxml_inject_opengraph_tags');
+		function braftonxml_inject_opengraph_tags()
+		{
+			if (!is_single())
+				return;
+			
+			global $post;
+			$map = function($tag, $content) {
+				if (empty($tag) || empty($content))
+					return '';
+				
+				return sprintf('<meta property="%s" content="%s" />', $tag, $content);
+			};
+			
+			$tags = array(
+				'og:type' => 'article',
+				'og:site_name' => get_bloginfo('name'),
+				'og:url' => curPageURL(),
+				'og:title' => preg_replace('/<.*?>/', '', get_the_title()),
+				'og:description' => htmlspecialchars(preg_replace('/<.*?>/', '', get_the_excerpt())),
+				'og:image' => wp_get_attachment_url(get_post_thumbnail_id($post->ID)),
+				'article:published_time' => date('c', strtotime($post->post_date)),
+			);
+			
+			echo implode("\n", array_map($map, array_keys($tags), $tags));
+		}
+		
+		// this runs last (or late) to minimize plugin conflicts
+		add_filter('language_attributes', 'braftonxml_inject_opengraph_namespaces', 100);
+		function braftonxml_inject_opengraph_namespaces($content)
+		{
+			$namespaces = array('xmlns:og="http://ogp.me/ns#"', 'xmlns:article="http://ogp.me/ns/article#"');
+			
+			foreach ($namespaces as $ns)
+				if (strpos($content, $ns) === false)
+					$content .= ' ' . $ns;
+			
+			return trim($content);
 		}
 
 		
