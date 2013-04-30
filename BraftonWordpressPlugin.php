@@ -271,7 +271,8 @@
 			echo implode("\n", array_map($map, array_keys($tags), $tags));
 		}
 		
-		add_filter('language_attributes', 'braftonxml_inject_opengraph_namespaces');
+		// this runs last (or late) to minimize plugin conflicts
+		add_filter('language_attributes', 'braftonxml_inject_opengraph_namespaces', 100);
 		function braftonxml_inject_opengraph_namespaces($content)
 		{
 			$namespaces = array('xmlns:og="http://ogp.me/ns#"', 'xmlns:article="http://ogp.me/ns/article#"');
