@@ -166,7 +166,7 @@ function clear_crons_left()
 add_action('admin_menu', 'braftonxml_sched_add_admin_pages');
 function braftonxml_sched_add_admin_pages()
 {
-	add_options_page('Brafton Article Loader', 'Brafton Article Loader', 10, __FILE__, 'braftonxml_sched_options_page');
+	add_options_page('Brafton Article Loader', 'Brafton Article Loader', 'update_plugins', __FILE__, 'braftonxml_sched_options_page');
 }
 
 /* Options sent by the options form are set here */
