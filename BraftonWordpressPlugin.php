@@ -1200,7 +1200,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		if ($post_id)
 		{
 			$article['ID'] = $post_id;
-			if (get_option("braftonxml_overwrite", "on") == on)
+			if (get_option("braftonxml_overwrite", "on") == 'on')
 				wp_update_post($article);
 			
 			if (populate_postmeta($article_count, $post_id, $image_id))
