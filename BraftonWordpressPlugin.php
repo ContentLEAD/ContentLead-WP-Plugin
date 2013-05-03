@@ -991,6 +991,12 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		
 		$keywords = $a->getKeywords();
 		$photo_option = get_option("braftonxml_sched_photo", 'large');
+		$post_image = null;
+		$post_image_caption = null;
+		
+		// Download main image to Wordpress uploads directory (faster page load times)
+		// [citation needed] -brian 2013.05.03
+		$upload_array = wp_upload_dir();
 		
 		//Check if picture exists
 		if (!empty($photos))
@@ -1007,15 +1013,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 				$post_image_caption = $photos[0]->getCaption();
 				$image_id = $photos[0]->getId();
 			}
-			else
-			{
-				$post_image = null;
-				$post_image_caption = null;
-			}
 		}
-		
-		// Download main image to Wordpress uploads directory (faster page load times)
-		$upload_array = wp_upload_dir();
 		
 		//$img_exists = brafton_img_exists($image_id);
 		/*if($img_exists) {
@@ -1027,8 +1025,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$master_image = image_download($upload_array, $post_image, $date, $ch);
 			$local_image_path = $master_image[0];
 		}
-		
-		if (!$post_image)
+		else
 			$local_image_path = null;
 		
 		$post_id = brafton_post_exists($brafton_id);
