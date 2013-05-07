@@ -1220,8 +1220,8 @@ function braftonxml_sched_load_articles($url, $API_Key)
 						$attach_id = wp_insert_attachment($attachment, $local_image_path, $post_id);
 						$attach_data = wp_generate_attachment_metadata($attach_id, $local_image_path);
 						wp_update_attachment_metadata($attach_id, $attach_data);
-						add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
-						add_post_meta($post_id, 'pic_id', $image_id, true);
+						update_post_meta($post_id, '_thumbnail_id', $attach_id);
+						update_post_meta($post_id, 'pic_id', $image_id);
 					}
 				}
 			}
