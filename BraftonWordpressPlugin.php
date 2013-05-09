@@ -332,6 +332,7 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 {
 	braftonxml_sched_load_articles($url, $API_Key);
 	update_option("braftonxml_sched_triggercount", get_option("braftonxml_sched_triggercount") + 1);
+	duplicateKiller();
 }
 
 /* The options page display */
@@ -1279,30 +1280,29 @@ function braftonxml_sched_load_articles($url, $API_Key)
 function duplicateKiller()
 {
 	global $wpdb;
-	$allPosts = $wpdb->get_results($wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='post'", 'null'));
-	foreach ($allPosts as $post)
+	//grab post_id for all posts with a brafton ID associated with them
+	$braftonPosts = $wpdb->get_results($wpdb->prepare("SELECT post_id FROM $wpdb->postmeta WHERE meta_key = 'brafton_id'", $brafton_id));
+
+	foreach( $braftonPosts as $postID )
 	{
-		$thisTitle = $post->post_title;
-		foreach ($allPosts as $postInner)
+		//grab brafton_id of post to check for copies of
+		$braftonID = get_post_meta( $postID, 'brafton_id', true );
+		
+		$i = 0;
+		foreach( $braftonPosts as $innerPost )
 		{
-			if ($thisTitle == $postInner->post_title)
-				$dupe++;
+			$toCompare = get_post_meta($innerPost, 'brafton_id', true);
 			
-			if ($dupe >= 2)
+			//if a post is found with matching "brafton_id"s but different "post_id"s, we have a dupe!
+			if( $braftonID == $toCompare && $postID != $innerPost )
 			{
-				$braftonId = get_post_meta($postInner->ID, 'brafton_id', $single);
-				if (isset($braftonId[0]))
-				{
-					logMsg("Detected Dupe: " . $thisTitle);
-					$wpdb->query("DELETE FROM $wpdb->posts WHERE ID=" . $postInner->ID);
-					unset($allPosts[$i]);
-				}
+				//delete $innerPost from WP database
+				wp_delete_post( $innerPost, true );
+				//...and remove from array of posts to be compared (since it no longer exists)
+				unset( $braftonPosts[$i] );
 			}
 			$i++;
 		}
-		
-		$i = 0;
-		$dupe = 0;
 	}
 }
 
