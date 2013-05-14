@@ -272,14 +272,6 @@ function braftonxml_inject_opengraph_tags()
 		return;
 	
 	global $post;
-	$map = function($tag, $content)
-	{
-		if (empty($tag) || empty($content))
-			return '';
-		
-		return sprintf('<meta property="%s" content="%s" />', $tag, $content);
-	};
-	
 	$tags = array(
 		'og:type' => 'article',
 		'og:site_name' => get_bloginfo('name'),
@@ -290,7 +282,11 @@ function braftonxml_inject_opengraph_tags()
 		'article:published_time' => date('c', strtotime($post->post_date))
 	);
 	
-	echo implode("\n", array_map($map, array_keys($tags), $tags));
+	$tagsHtml = '';
+	foreach ($tags as $tag => $content)
+		$tagsHtml .= sprintf('<meta property="%s" content="%s" />', $tag, $content) . "\n";
+	
+	echo trim($tagsHtml);
 }
 
 // this runs last (or late) to minimize plugin conflicts
@@ -303,7 +299,7 @@ function braftonxml_inject_opengraph_namespaces($content)
 	);
 	
 	foreach ($namespaces as $ns)
-		if (strpos($content, $ns) === false)
+		if (strpos($content, $ns) === false) // don't add attributes twice
 			$content .= ' ' . $ns;
 	
 	return trim($content);
