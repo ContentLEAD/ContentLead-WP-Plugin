@@ -1277,7 +1277,7 @@ function duplicateKiller()
 {
 	global $wpdb;
 	//grab post_id for all posts with a brafton ID associated with them
-	$braftonPosts = $wpdb->get_results($wpdb->prepare("SELECT post_id FROM $wpdb->postmeta WHERE meta_key = 'brafton_id'", $brafton_id));
+	$braftonPosts = $wpdb->get_col("SELECT post_id FROM $wpdb->postmeta WHERE meta_key = 'brafton_id'");
 
 	foreach( $braftonPosts as $postID )
 	{
