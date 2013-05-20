@@ -3,7 +3,7 @@
 	Plugin Name: Brafton API Article Loader
 	Plugin URI: http://www.brafton.com/support/wordpress
 	Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-	Version: 1.3.2
+	Version: 1.3.3
 	Author: Brafton, Inc.
 	Author URI: http://brafton.com/support/wordpress
 */
@@ -272,14 +272,6 @@ function braftonxml_inject_opengraph_tags()
 		return;
 	
 	global $post;
-	$map = function($tag, $content)
-	{
-		if (empty($tag) || empty($content))
-			return '';
-		
-		return sprintf('<meta property="%s" content="%s" />', $tag, $content);
-	};
-	
 	$tags = array(
 		'og:type' => 'article',
 		'og:site_name' => get_bloginfo('name'),
@@ -290,7 +282,11 @@ function braftonxml_inject_opengraph_tags()
 		'article:published_time' => date('c', strtotime($post->post_date))
 	);
 	
-	echo implode("\n", array_map($map, array_keys($tags), $tags));
+	$tagsHtml = '';
+	foreach ($tags as $tag => $content)
+		$tagsHtml .= sprintf('<meta property="%s" content="%s" />', $tag, $content) . "\n";
+	
+	echo trim($tagsHtml);
 }
 
 // this runs last (or late) to minimize plugin conflicts
@@ -303,7 +299,7 @@ function braftonxml_inject_opengraph_namespaces($content)
 	);
 	
 	foreach ($namespaces as $ns)
-		if (strpos($content, $ns) === false)
+		if (strpos($content, $ns) === false) // don't add attributes twice
 			$content .= ' ' . $ns;
 	
 	return trim($content);
@@ -332,6 +328,13 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 {
 	braftonxml_sched_load_articles($url, $API_Key);
 	update_option("braftonxml_sched_triggercount", get_option("braftonxml_sched_triggercount") + 1);
+	
+	// HACK: posts are duplicated due to a lack of cron lock resolution (see http://core.trac.wordpress.org/ticket/19700)
+	// this is fixed in wp versions >= 3.4.
+	$wpVersion = get_bloginfo('version');
+	
+	if (version_compare($wpVersion, '3.4', '<'))
+		duplicateKiller();
 }
 
 /* The options page display */
@@ -1279,30 +1282,29 @@ function braftonxml_sched_load_articles($url, $API_Key)
 function duplicateKiller()
 {
 	global $wpdb;
-	$allPosts = $wpdb->get_results($wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_status = 'publish' AND post_type='post'", 'null'));
-	foreach ($allPosts as $post)
+	//grab post_id for all posts with a brafton ID associated with them
+	$braftonPosts = $wpdb->get_col("SELECT post_id FROM $wpdb->postmeta WHERE meta_key = 'brafton_id'");
+
+	foreach( $braftonPosts as $postID )
 	{
-		$thisTitle = $post->post_title;
-		foreach ($allPosts as $postInner)
+		//grab brafton_id of post to check for copies of
+		$braftonID = get_post_meta( $postID, 'brafton_id', true );
+		
+		$i = 0;
+		foreach( $braftonPosts as $innerPost )
 		{
-			if ($thisTitle == $postInner->post_title)
-				$dupe++;
+			$toCompare = get_post_meta($innerPost, 'brafton_id', true);
 			
-			if ($dupe >= 2)
+			//if a post is found with matching "brafton_id"s but different "post_id"s, we have a dupe!
+			if( $braftonID == $toCompare && $postID != $innerPost )
 			{
-				$braftonId = get_post_meta($postInner->ID, 'brafton_id', $single);
-				if (isset($braftonId[0]))
-				{
-					logMsg("Detected Dupe: " . $thisTitle);
-					$wpdb->query("DELETE FROM $wpdb->posts WHERE ID=" . $postInner->ID);
-					unset($allPosts[$i]);
-				}
+				//delete $innerPost from WP database
+				wp_delete_post( $innerPost, true );
+				//...and remove from array of posts to be compared (since it no longer exists)
+				unset( $braftonPosts[$i] );
 			}
 			$i++;
 		}
-		
-		$i = 0;
-		$dupe = 0;
 	}
 }
 
