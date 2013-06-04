@@ -450,7 +450,14 @@ function braftonxml_sched_options_page()
 						<p>Import schedule was triggered <?php echo get_option("braftonxml_sched_triggercount"); ?> times.</p>
 <?php
 		}
-	}
+	}else { ?>
+		<b style="color:red">Content importer is Not scheduled!</b>
+		
+		<form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>"><br/><br/>
+
+		<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" /><br/><br/>
+		
+	<?php }
 ?>
 
 <?php
@@ -487,24 +494,14 @@ function braftonxml_sched_options_page()
 		$filename = logLoc();
 		$newName = clearLog();
 		if (rename($filename, $newName) == false)
-			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span>";
+			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
 	}
 ?>
-
-						</div>
-<?php
-	if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
-	{
-?>
-							<br />
-							<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-
-								<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
-								<br><br>
 <?php
 		$domain = get_option("braftonxml_domain");
 ?>
 
+		<br><br>
 								<b><u>API Domain</u></b><br />
 								<select name='braftonxml_domain'>
 									<option value="api.brafton.com" <?php
@@ -732,12 +729,8 @@ function braftonxml_sched_options_page()
 			</div><!--Advanced Options-->
 			<br>
 			<br>
-			<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
-
+			
 		</form>
-<?php
-	}
-?>
 </div>
 <?php
 }
