@@ -413,6 +413,11 @@ function braftonxml_sched_options_page()
 ?>              
 
 				<div style="padding: 10px; border: 1px solid #cccccc;">
+				<?php $wp_version=get_bloginfo('version');
+				if(version_compare($wp_version, '2.9') >= 0) {
+					if(!current_theme_supports( 'post-thumbnails' )) echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>"; 
+				}
+				?>
 <?php
 	global $feedSettings;
 	if (wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
