@@ -1239,6 +1239,13 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			
 			add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 			
+			// castleford uses a secondary title for keyword quotas
+			// this is a stopgap. -brian 06.06.2013
+			$seoTitle = $post_title;
+			$htmlTitle = $a->getHtmlTitle();
+			if (get_option("braftonxml_domain") == 'api.castleford.com.au' && !empty($htmlTitle))
+				$seoTitle = $htmlTitle;
+			
 			// All-in-One SEO Plugin integration
 			if (function_exists('aioseop_get_version'))
 			{
@@ -1249,7 +1256,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			// Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
 			if (is_plugin_active('wordpress-seo/wp-seo.php'))
 			{
-				add_post_meta($post_id, '_yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, '_yoast_wpseo_title', $seoTitle, true);
 				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 			
