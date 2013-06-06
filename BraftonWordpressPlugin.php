@@ -480,7 +480,7 @@ function braftonxml_sched_options_page()
 		if ($handle == false)
 			"<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
 		$contents = fread($handle, filesize($filename));
-		echo "<pre>" . $contents . "<pre>";
+		echo "<pre>" . $contents . "</pre>";
 		fclose($handle);
 	}
 ?>
