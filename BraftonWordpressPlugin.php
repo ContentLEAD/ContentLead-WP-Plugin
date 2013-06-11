@@ -3,7 +3,7 @@
 	Plugin Name: Brafton API Article Loader
 	Plugin URI: http://www.brafton.com/support/wordpress
 	Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-	Version: 1.3.3
+	Version: 1.3.4
 	Author: Brafton, Inc.
 	Author URI: http://brafton.com/support/wordpress
 */
@@ -402,7 +402,7 @@ function braftonxml_sched_options_page()
 			}
 			</style>
 
-			<div class=wrap>
+			<div class="wrap">
 				<h1>Content Importer</h1>
 
 
@@ -412,7 +412,17 @@ function braftonxml_sched_options_page()
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
 ?>              
 
-				<div style="padding: 10px; border: 1px solid #cccccc;">
+				<?php $wp_version=get_bloginfo('version');
+				if(version_compare($wp_version, '2.9') >= 0) {
+					if(!current_theme_supports( 'post-thumbnails' )) {
+				?>
+					<div style="padding: 10px; border: 1px solid #cccccc;">
+						<?php echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>"; ?>
+					</div>
+				<?php
+					}
+				}
+				?>
 <?php
 	global $feedSettings;
 	if (wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
@@ -450,7 +460,14 @@ function braftonxml_sched_options_page()
 						<p>Import schedule was triggered <?php echo get_option("braftonxml_sched_triggercount"); ?> times.</p>
 <?php
 		}
-	}
+	}else { ?>
+		<b style="color:red">Content importer is Not scheduled!</b>
+		
+		<form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>"><br/><br/>
+
+		<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" /><br/><br/>
+		
+	<?php }
 ?>
 
 <?php
@@ -468,7 +485,7 @@ function braftonxml_sched_options_page()
 		if ($handle == false)
 			"<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
 		$contents = fread($handle, filesize($filename));
-		echo "<pre>" . $contents . "<pre>";
+		echo "<pre>" . $contents . "</pre>";
 		fclose($handle);
 	}
 ?>
@@ -487,24 +504,14 @@ function braftonxml_sched_options_page()
 		$filename = logLoc();
 		$newName = clearLog();
 		if (rename($filename, $newName) == false)
-			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span>";
+			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
 	}
 ?>
-
-						</div>
-<?php
-	if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
-	{
-?>
-							<br />
-							<form style="padding: 10px; border: 1px solid #cccccc;" method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-
-								<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
-								<br><br>
 <?php
 		$domain = get_option("braftonxml_domain");
 ?>
 
+		<br><br>
 								<b><u>API Domain</u></b><br />
 								<select name='braftonxml_domain'>
 									<option value="api.brafton.com" <?php
@@ -732,12 +739,8 @@ function braftonxml_sched_options_page()
 			</div><!--Advanced Options-->
 			<br>
 			<br>
-			<input type="submit" name="braftonxml_sched_submit" id="braftonxml_sched_submit" class="awesomeButton greenAwesomeButton" value="Enable Importer" />
-
+			
 		</form>
-<?php
-	}
-?>
 </div>
 <?php
 }
@@ -1241,6 +1244,13 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			
 			add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 			
+			// castleford uses a secondary title for keyword quotas
+			// this is a stopgap. -brian 06.06.2013
+			$seoTitle = $post_title;
+			$htmlTitle = $a->getHtmlTitle();
+			if (get_option("braftonxml_domain") == 'api.castleford.com.au' && !empty($htmlTitle))
+				$seoTitle = $htmlTitle;
+			
 			// All-in-One SEO Plugin integration
 			if (function_exists('aioseop_get_version'))
 			{
@@ -1251,7 +1261,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			// Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
 			if (is_plugin_active('wordpress-seo/wp-seo.php'))
 			{
-				add_post_meta($post_id, '_yoast_wpseo_title', $post_title, true);
+				add_post_meta($post_id, '_yoast_wpseo_title', $seoTitle, true);
 				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 			
