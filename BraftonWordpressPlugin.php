@@ -417,7 +417,7 @@ function braftonxml_sched_options_page()
 					if(!current_theme_supports( 'post-thumbnails' )) {
 				?>
 					<div style="padding: 10px; border: 1px solid #cccccc;">
-						echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>";
+						<?php echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>"; ?>
 					</div>
 				<?php
 					}
