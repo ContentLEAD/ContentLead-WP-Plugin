@@ -402,7 +402,7 @@ function braftonxml_sched_options_page()
 			}
 			</style>
 
-			<div class=wrap>
+			<div class="wrap">
 				<h1>Content Importer</h1>
 
 
