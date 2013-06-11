@@ -412,13 +412,17 @@ function braftonxml_sched_options_page()
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
 ?>              
 
-				<div style="padding: 10px; border: 1px solid #cccccc;">
 				<?php $wp_version=get_bloginfo('version');
 				if(version_compare($wp_version, '2.9') >= 0) {
-					if(!current_theme_supports( 'post-thumbnails' )) echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>"; 
+					if(!current_theme_supports( 'post-thumbnails' )) {
+				?>
+					<div style="padding: 10px; border: 1px solid #cccccc;">
+						echo "<br/><span style='color:red;'> Post Thumbnails (Featured Images) are not enabled!</span><br/>";
+					</div>
+				<?php
+					}
 				}
 				?>
-				</div>
 <?php
 	global $feedSettings;
 	if (wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
