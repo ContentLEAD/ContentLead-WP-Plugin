@@ -347,7 +347,7 @@ function braftonxml_sched_options_page()
 	add_option("braftonxml_sched_photo", "large");
 	add_option("braftonxml_sched_status", "publish");
 	add_option("braftonxml_sched_tags", "none_tags");
-	add_option("braftonxml_overwrite", "on");
+	add_option("braftonxml_overwrite", "off");
 	add_option("braftonxml_publishdate", "published");
 	
 	add_option("braftonxml_video", "off");
