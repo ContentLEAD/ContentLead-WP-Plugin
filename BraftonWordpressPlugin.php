@@ -400,6 +400,17 @@ function braftonxml_sched_options_page()
 			.greenAwesomeButton{
 				background-color: #00BF32;
 			}
+			
+			#video-settings {
+				border: solid #E6E6E6 1px;
+				background-color: #F5F5F5;
+				display:inline-block;
+				padding:10px;
+			}
+			
+			#video-settings h3 {
+				color: red;
+			}
 			</style>
 
 			<div class="wrap">
@@ -697,7 +708,7 @@ function braftonxml_sched_options_page()
 ?>/> Created Date<br />
 
 				<br /> 
-
+				<div id="video-settings">
 				<b><u>Brafton Video Integration</u></b><br />        
 				
 				<input type="radio" name="braftonxml_video" value="on" <?php
@@ -733,6 +744,7 @@ function braftonxml_sched_options_page()
 				<input type="text" name="braftonxml_videoFeedNum" value="<?php
 		echo get_option("braftonxml_videoFeedNum");
 ?>" /><br />
+				</div><!--/video-settings-->
 				<br /> 
 
 
