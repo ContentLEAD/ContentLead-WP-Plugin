@@ -709,6 +709,7 @@ function braftonxml_sched_options_page()
 
 				<br /> 
 				<div id="video-settings">
+				<h3>**Please do not adjust these settings unless you are importing video.**</h3>
 				<b><u>Brafton Video Integration</u></b><br />        
 				
 				<input type="radio" name="braftonxml_video" value="on" <?php
