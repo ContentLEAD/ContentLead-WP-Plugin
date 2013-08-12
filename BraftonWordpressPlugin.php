@@ -454,7 +454,7 @@ function braftonxml_sched_options_page()
 				$timestamp += 60;
 				if ($timestamp < time())
 				{
-					echo '<p style="color:red;">It appears there is an error with the cron scheduler.  This is likely due to another of the <b>' . $countCron . '</b> plugins utilizing the Wordpress Cron Scheduler</p>';
+					logMsg('It appears there is an error with the cron scheduler.  This is likely due to another of the ' . $countCron . ' plugins utilizing the Wordpress Cron Scheduler');
 					//echo $timestamp."<".time();
 				}
 			}
