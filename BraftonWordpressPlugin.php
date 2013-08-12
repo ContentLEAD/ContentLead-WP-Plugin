@@ -789,7 +789,7 @@ function braftonxml_sched_load_videos()
 	
 	$article_count = count($articleList->items);
 	
-	set_magic_quotes_runtime(0);
+	ini_set('magic_quotes_runtime', 0);
 	$counter = 0;
 	
 	$categories = $client->Categories();
@@ -958,7 +958,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	$article_count = count($articles);
 	$counter = 0;
 	
-	set_magic_quotes_runtime(0);
+	ini_set('magic_quotes_runtime', 0);
 	
 	//Article Import Loop
 	foreach ($articles as $a)
