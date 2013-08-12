@@ -770,10 +770,12 @@ function braftonxml_sched_load_videos()
 	$secretKey = get_option("braftonxml_videoSecret");
 	
 	$baseURL = 'http://api.video.brafton.com/v2/';
-	$photoURI = "http://pictures.directnews.co.uk/v2/";
+	$photoURI = "http://pictures.video.brafton.com/v2/";
 	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
 	$photoClient = new AdferoPhotoClient($photoURI);
+	
+	$videoOutClient = $videoClient->videoOutputs();
 	
 	$feedNum = get_option("braftonxml_videoFeedNum");
 	
@@ -818,10 +820,37 @@ function braftonxml_sched_load_videos()
 			$category = $categories->Get($categoryId);
 		}
 		
-		$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
+		$presplash = $thisArticle->fields['preSplash'];
+		$postsplash = $thisArticle->fields['postSplash'];
+				
+		$videoList=$videoOutClient->ListForArticle($brafton_id,0,10);
+		$list=$videoList->items;
+		$ogg=false;
+		$mp4=false;
+		$flv=false;
+		foreach($list as $listItem){
+			$output=$videoOutClient->Get($listItem->id);
+			//logMsg($output->path);
+			if($output->type=="htmlmp4" && !$mp4) {$mp4=$output->path; $width=$output->width; $height=$output->height;}
+			if($output->type=="htmlogg" && !$ogg) {$ogg=$output->path; $width=$output->width; $height=$output->height;}
+			if($output->type=="flash" && !$flv) {$flv=$output->path; $width=$output->width; $height=$output->height;}
+		}
+		//old code
+		//$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 		
-		if (strpos($embedCode->embedCode, "adobe") < 30)
-			continue;
+		
+		$embedCode=<<<EOT
+		<video id='video-$brafton_id' class='video-js vjs-default-skin'
+			controls preload='auto' width="$width" height='$height'
+			poster='$presplash'
+			data-setup='{ "autoplay": true }'>
+			<source src="$mp4" type='video/mp4' />
+			<source src="$ogg" type='video/ogg' />
+			<source src="$flv" type='video/flash' />
+		</video>
+EOT;
+		//if (strpos($embedCode->embedCode, "adobe") < 30)
+		//continue;
 		
 		//echo $embedCode->embedCode."<br><br><br>";
 		
@@ -858,7 +887,7 @@ function braftonxml_sched_load_videos()
 		if (!$post_id)
 			return;
 		
-		add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>" . $embedCode->embedCode . "</div>", true);
+		add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>" . $embedCode . "</div>", true);
 		add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 		
 		// All-in-One SEO Plugin integration
