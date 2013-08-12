@@ -329,12 +329,8 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 	braftonxml_sched_load_articles($url, $API_Key);
 	update_option("braftonxml_sched_triggercount", get_option("braftonxml_sched_triggercount") + 1);
 	
-	// HACK: posts are duplicated due to a lack of cron lock resolution (see http://core.trac.wordpress.org/ticket/19700)
-	// this is fixed in wp versions >= 3.4.
-	$wpVersion = get_bloginfo('version');
-	
-	if (version_compare($wpVersion, '3.4', '<'))
-		duplicateKiller();
+	//we don't like dupes so away with them!
+	duplicateKiller();
 }
 
 /* The options page display */
@@ -1313,19 +1309,37 @@ function duplicateKiller()
 		//grab brafton_id of post to check for copies of
 		$braftonID = get_post_meta( $postID, 'brafton_id', true );
 		
+		//grab brafton title (double checkin')
+		$braftonTitle = get_the_title($postID);
+		
 		$i = 0;
+		
 		foreach( $braftonPosts as $innerPost )
 		{
+			//savin resources, yessah
+			if( $postID == $innerPost ) continue;
+			
+			//get brafton ID for comparison
 			$toCompare = get_post_meta($innerPost, 'brafton_id', true);
 			
+			//get title for comparison
+			$titleCompare = get_the_title($innerPost);
+			
 			//if a post is found with matching "brafton_id"s but different "post_id"s, we have a dupe!
-			if( $braftonID == $toCompare && $postID != $innerPost )
+			if( $braftonID == $toCompare )
+			{
+				//delete $innerPost from WP database
+				wp_delete_post( $innerPost, true );
+				//...and remove from array of posts to be compared (since it no longer exists)
+				unset( $braftonPosts[$i] );
+			} else if ( $braftonTitle == $titleCompare )
 			{
 				//delete $innerPost from WP database
 				wp_delete_post( $innerPost, true );
 				//...and remove from array of posts to be compared (since it no longer exists)
 				unset( $braftonPosts[$i] );
 			}
+			
 			$i++;
 		}
 	}
