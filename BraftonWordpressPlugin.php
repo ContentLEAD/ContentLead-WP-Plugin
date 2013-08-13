@@ -785,7 +785,7 @@ function braftonxml_sched_load_videos()
 	
 	$article_count = count($articleList->items);
 	
-	set_magic_quotes_runtime(0);
+	ini_set('magic_quotes_runtime', 0);
 	$counter = 0;
 	
 	$categories = $client->Categories();
@@ -954,7 +954,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	$article_count = count($articles);
 	$counter = 0;
 	
-	set_magic_quotes_runtime(0);
+	ini_set('magic_quotes_runtime', 0);
 	
 	//Article Import Loop
 	foreach ($articles as $a)
@@ -1030,12 +1030,10 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			}
 		}
 		
-		//$img_exists = brafton_img_exists($image_id);
-		/*if($img_exists) {
+		$img_exists = brafton_img_exists($image_id);
+		if($img_exists) {
 		$local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-		}*/
-		
-		if ($post_image)
+		}else if ($post_image)
 		{
 			$master_image = image_download($upload_array, $post_image, $date, $ch);
 			$local_image_path = $master_image[0];
