@@ -482,41 +482,35 @@ function braftonxml_sched_options_page()
 ?>
 
 <?php
-	if (!isset($_GET['showLog']) || $_GET['showLog'] == 0)
-	{
-		$logURL = curPageURL() . '&showLog=1';
-?>
-						<a href="<?php echo $logURL; ?>">Display Log</a>
-<?php
-	}
-	else
-	{
-		$filename = logLoc();
-		$handle = fopen($filename, "r");
-		if ($handle == false)
-			"<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
-		$contents = fread($handle, filesize($filename));
-		echo "<pre>" . $contents . "</pre>";
-		fclose($handle);
-	}
-?>
-
-
-<?php
-	if (!isset($_GET['clearLog']) || $_GET['clearLog'] == 0)
-	{
-		$logURL = curPageURL() . '&clearLog=1';
-?>
-							<a href="<?php echo $logURL; ?>">Clear Log</a>
-<?php
-	}
-	else
-	{
-		$filename = logLoc();
-		$newName = clearLog();
-		if (rename($filename, $newName) == false)
-			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
-	}
+	//log file clear and display, commented out because of general unusefulness and issues it caused
+	
+	// if (!isset($_GET['showLog']) || $_GET['showLog'] == 0)
+	// {
+		// $logURL = curPageURL() . '&showLog=1';
+		// echo "<a href='" . $logURL . "'>Display Log</a>";
+		// }
+	// else
+	// {
+		// $filename = logLoc();
+		// $handle = fopen($filename, "r");
+		// if ($handle == false)
+			// "<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
+		// $contents = fread($handle, filesize($filename));
+		// echo "<pre>" . $contents . "</pre>";
+		// fclose($handle);
+	// }
+	// if (!isset($_GET['clearLog']) || $_GET['clearLog'] == 0)
+	// {
+		// $logURL = curPageURL() . '&clearLog=1';
+		// echo "<a href='" . $logURL . "'>Clear Log</a>";
+	// }
+	// else
+	// {
+		// $filename = logLoc();
+		// $newName = clearLog();
+		// if (rename($filename, $newName) == false)
+			// echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
+	// }
 ?>
 <?php
 		$domain = get_option("braftonxml_domain");
