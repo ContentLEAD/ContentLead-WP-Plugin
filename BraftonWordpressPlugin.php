@@ -454,7 +454,7 @@ function braftonxml_sched_options_page()
 				$timestamp += 60;
 				if ($timestamp < time())
 				{
-					logMsg('It appears there is an error with the cron scheduler.  This is likely due to another of the ' . $countCron . ' plugins utilizing the Wordpress Cron Scheduler');
+					//logMsg('It appears there is an error with the cron scheduler.  This is likely due to another of the ' . $countCron . ' plugins utilizing the Wordpress Cron Scheduler');
 					//echo $timestamp."<".time();
 				}
 			}
@@ -902,13 +902,13 @@ function braftonxml_sched_load_videos()
 			}
 		}
 		
-		logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
+		//logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
 	}
 }
 
 function braftonxml_sched_load_articles($url, $API_Key)
 {
-	logMsg("Start Run");
+	//logMsg("Start Run");
 	
 	if (get_option("braftonxml_video") == 'on')
 	{
@@ -1292,7 +1292,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			}
 		}
 		
-		logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
+		//logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
 	}
 }
 
