@@ -179,8 +179,10 @@ function braftonxml_sched_setoptions()
 	if (!empty($_POST['braftonxml_default_author']))
 		update_option("braftonxml_default_author", $_POST['braftonxml_default_author']);
 	
-	if (!empty($_POST['braftonxml_sched_API_KEY']))
-		update_option("braftonxml_sched_API_KEY", $_POST['braftonxml_sched_API_KEY']);
+	if (!empty($_POST['braftonxml_sched_API_KEY'])){
+		$apiKey=trim($_POST['braftonxml_sched_API_KEY']);
+		update_option("braftonxml_sched_API_KEY", $apiKey);
+	}
 	
 	if (!empty($_POST['braftonxml_domain']))
 	{
