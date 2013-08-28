@@ -219,11 +219,15 @@ function braftonxml_sched_setoptions()
 	if (!empty($_POST['braftonxml_video']))
 		update_option("braftonxml_video", $_POST['braftonxml_video']);
 	
-	if (!empty($_POST['braftonxml_videoPublic']))
-		update_option("braftonxml_videoPublic", $_POST['braftonxml_videoPublic']);
-	
-	if (!empty($_POST['braftonxml_videoSecret']))
-		update_option("braftonxml_videoSecret", $_POST['braftonxml_videoSecret']);
+	if (!empty($_POST['braftonxml_videoPublic'])){
+		$public=trim($_POST['braftonxml_videoPublic']);
+		update_option("braftonxml_videoPublic", $public);
+	}
+
+	if (!empty($_POST['braftonxml_videoSecret'])){
+		$secret=trim($_POST['braftonxml_videoSecret']);
+		update_option("braftonxml_videoSecret", $secret);
+	}
 	
 	if (!empty($_POST['braftonxml_videoFeedNum']))
 		update_option("braftonxml_videoFeedNum", $_POST['braftonxml_videoFeedNum']);
