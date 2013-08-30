@@ -841,7 +841,7 @@ function braftonxml_sched_load_videos()
 		
 		$embedCode=<<<EOT
 		<video id='video-$brafton_id' class='video-js vjs-default-skin'
-			controls preload='auto' width="$width" height='$height'
+			controls preload='none' width="$width" height='$height'
 			poster='$presplash'
 			data-setup='{ "autoplay": true }'>
 			<source src="$mp4" type='video/mp4' />
