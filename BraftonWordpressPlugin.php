@@ -825,7 +825,7 @@ function braftonxml_sched_load_videos()
 		
 		//echo $embedCode->embedCode."<br><br><br>";
 		
-		$post_author = get_option("braftonxml_default_author", 1);
+		$post_author = apply_filters('braftonxml_author', get_option("braftonxml_default_author", 1));
 		
 		//$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
 		$post_content = $thisArticle->fields['content'];
@@ -1050,7 +1050,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$post_id = brafton_post_exists($brafton_id);
 		$post_date;
 		$post_date_gmt;
-		$post_author = get_option("braftonxml_default_author", 1);
+		$post_author = apply_filters('braftonxml_author', get_option("braftonxml_default_author", 1));
 		if ($post_id)
 			$post_status = get_post_status($post_id);
 		else
