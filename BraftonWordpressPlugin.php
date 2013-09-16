@@ -12,6 +12,7 @@
 require_once(ABSPATH . 'wp-admin/includes/admin.php');
 require_once(ABSPATH . 'wp-includes/post.php');
 include_once 'SampleAPIClientLibrary/ApiHandler.php';
+include_once 'sitemap.php';
 
 add_action('deactivate_BraftonWordpressPlugin/BraftonWordpressPlugin.php', 'braftonxml_sched_deactivate');
 add_action('delete_term', "brafton_category_delete");
@@ -366,6 +367,28 @@ function braftonxml_sched_options_page()
 				else
 					which.style.display="block";
 			}
+			
+			//function keyCheck(){
+			//	if($('input[id=just_articles]:checked')){
+			//		if(document.getElementById('brafton_api_key').value=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+			//		{
+			//			return false;
+			//		} else return true;
+			//	}else if($('input[id=just_video]:checked')){
+			//		if($('input[id=brafton_video_public]:checked').val=='xxxxx' || $('input[id=brafton_video_secret]:checked').val=='xxxxx')
+			//		{
+			//			return false;
+					// } else return true;
+				// }else{
+			//		both, check all of them
+					// if(document.getElementById('brafton_video_secret').value=='xxxxx' || 
+						// document.getElementById('brafton_video_public').value=='xxxxx' || 
+						// document.getElementById('brafton_api_key').value=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+					// {
+						// return false;
+					// } else return true;
+				// }
+			// }
 			</script>
 
 			<style>
@@ -421,6 +444,14 @@ function braftonxml_sched_options_page()
 <?php
 	if (!function_exists('curl_init'))
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
+	
+	$video_option=get_option("braftonxml_video");
+	
+	if (get_option("braftonxml_sched_API_KEY")=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' && $video_option!="on") 
+		echo "<span style='color:red'>Please check your API Key.</span><br/><br/>"; 
+		
+	//if (get_option("braftonxml_videoSecret")=='xxxxx' || get_option("braftonxml_videoPublic")=='xxxxx' && $video_option!="off") 
+	//	echo "<span style='color:red'>Please check your API Key.</span><br/><br/>"; 
 ?>              
 
 				<?php $wp_version=get_bloginfo('version');
@@ -544,7 +575,7 @@ function braftonxml_sched_options_page()
 
 
 
-								<input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+								<input type="text" name="braftonxml_sched_API_KEY" id="brafton_api_key" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
 								Example: 2de93ffd-280f-4d4b-9ace-be55db9ad4b7<br/>
 								<br/>Importer will run every hour<br />
 								
@@ -711,33 +742,33 @@ function braftonxml_sched_options_page()
 				<div id="video-settings">
 				<h3>**Please do not adjust these settings unless you are importing video.**</h3>
 				<b><u>Brafton Video Integration</u></b><br />        
-				
-				<input type="radio" name="braftonxml_video" value="on" <?php
-		if (get_option("braftonxml_video") == 'on')
+
+				<input type="radio" id="just_video" name="braftonxml_video" value="on" <?php
+		if ($video_option == 'on')
 		{
 			print 'checked';
 		}
 ?> /> Just Video<br />
-				<input type="radio" name="braftonxml_video" value="off" <?php
-		if (get_option("braftonxml_video") == 'off')
+				<input type="radio" id="just_articles" name="braftonxml_video" value="off" <?php
+		if ($video_option == 'off')
 		{
 			print 'checked';
 		}
 ?>/> Just Articles<br />
-				<input type="radio" name="braftonxml_video" value="both" <?php
-		if (get_option("braftonxml_video") == 'both')
+				<input type="radio" id="both_articles_video" name="braftonxml_video" value="both" <?php
+		if ($video_option == 'both')
 		{
 			print 'checked';
 		}
 ?>/> Both Articles and Video<br />
 				<br /> 
 				<b><u>Public Key</u></b><br />   
-				<input type="text" name="braftonxml_videoPublic" value="<?php
+				<input type="text" name="braftonxml_videoPublic" id="brafton_video_public" value="<?php
 		echo get_option("braftonxml_videoPublic");
 ?>" /><br />
 				<br /> 
 				<b><u>Private Key</u></b><br />   
-				<input type="text" name="braftonxml_videoSecret" value="<?php
+				<input type="text" name="braftonxml_videoSecret" id="brafton_video_secret" value="<?php
 		echo get_option("braftonxml_videoSecret");
 ?>" /><br />
 				<br /> 
@@ -796,6 +827,8 @@ function braftonxml_sched_load_videos()
 	
 	$categories = $client->Categories();
 	
+	$sitemap=array();
+	
 	// Article Import Loop
 	foreach ($articleList->items as $article)
 	{
@@ -841,9 +874,9 @@ function braftonxml_sched_load_videos()
 		
 		$embedCode=<<<EOT
 		<video id='video-$brafton_id' class='video-js vjs-default-skin'
-			controls preload='none' width="$width" height='$height'
+			controls preload='auto' width="$width" height='$height'
 			poster='$presplash'
-			data-setup='{ "autoplay": true }'>
+			data-setup='{"example_option":true}'>
 			<source src="$mp4" type='video/mp4' />
 			<source src="$ogg" type='video/ogg' />
 			<source src="$flv" type='video/flash' />
@@ -883,6 +916,17 @@ EOT;
 		
 		if (is_wp_error($post_id))
 			return $post_id;
+		else{
+			$sitemapaddition = array(
+				"url" => get_permalink($post_id),
+				"location" => $mp4,
+				"title" => $post_title,
+				"thumbnail" => $presplash,
+				"description" =>$post_content,
+				"publication" =>$post_date,
+			);
+			$sitemap[]=$sitemapaddition;
+		}
 		
 		if (!$post_id)
 			return;
@@ -939,6 +983,7 @@ EOT;
 		
 		logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
 	}
+	addURLs($sitemap);
 }
 
 function braftonxml_sched_load_articles($url, $API_Key)
@@ -967,6 +1012,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	}
 	else
 	{
+		if($API_Key=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx') die();
 		if (preg_match("/\.xml$/", $API_Key))
 			$articles = NewsItem::getNewsList($API_Key, 'news');
 		else
