@@ -423,6 +423,8 @@ function braftonxml_sched_options_page()
 <?php
 	if (!function_exists('curl_init'))
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
+	if (!class_exists('DOMDocument'))
+		echo "<li>WARNING: DOM XML is disabled or not installed on your server.  It is required for this plugin's operation.</li>";
 ?>              
 
 				<?php $wp_version=get_bloginfo('version');
