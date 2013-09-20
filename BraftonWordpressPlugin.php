@@ -543,7 +543,7 @@ function braftonxml_sched_options_page()
 
 
 								<input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-								Example: 2de93ffd-280f-4d4b-9ace-be55db9ad4b7<br/>
+								Example: dada3480-9d3b-4989-876a-663fdbe48be8<br/>
 								<br/>Importer will run every hour<br />
 								
 
