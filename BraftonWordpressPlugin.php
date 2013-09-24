@@ -1390,7 +1390,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	}
 	logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title . " via archive upload");
 	if($article_count == 0)
-		logMsg("No articles were importerted"); 
+		logMsg("Archive upload attempted but no articles were importerted"); 
 }
 
 
