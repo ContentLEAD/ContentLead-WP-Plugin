@@ -1287,7 +1287,6 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$article['ID'] = $post_id;
 			if (get_option("braftonxml_overwrite", "on") == 'on'){
 				wp_update_post($article);
-				logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title . " via archive upload");
 			}
 			
 			if (populate_postmeta($article_count, $post_id, $image_id))
@@ -1389,7 +1388,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		}
 		
 	}
-
+	logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title . " via archive upload");
 	if($article_count == 0)
 		logMsg("No articles were importerted"); 
 }
