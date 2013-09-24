@@ -15,9 +15,11 @@
 	//accepts array of sitemaps
 		$funkdoc = new DOMDocument();
 		//like funcdoc, but redman
-			
-		//load sitemap, check for failure
-		$funkdoc->load(site_url() . '/video-sitemap.xml');			
+		if(!file_exists('../video-sitemap.xml')){
+			$newurlset = $funkdoc ->createElement('urlset');
+			$funkdoc -> appendChild($newurlset);
+			$funkdoc->save('../video-sitemap.xml');
+		} else $funkdoc->load('../video-sitemap.xml');			
 			
 			if($funkdoc){
 				//get previous titles to prevent sitemap entry duplication
