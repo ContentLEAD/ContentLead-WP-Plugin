@@ -16,11 +16,12 @@
 		$funkdoc = new DOMDocument();
 		//like funcdoc, but redman
 		if(!file_exists('../video-sitemap.xml')){
-			$newurlset = $funkdoc ->createElement('urlset');
+			$newurlset = $funkdoc ->createElementNS('http://www.sitemaps.org/schemas/sitemap/0.9','urlset','');
 			$funkdoc -> appendChild($newurlset);
-			$funkdoc->save('../video-sitemap.xml');
-		} else $funkdoc->load('../video-sitemap.xml');			
-			
+			$newurlset->setAttributeNS('http://www.w3.org/2000/xmlns/' ,'xmlns:video', 'http://www.google.com/schemas/sitemap-video/1.1');
+			$funkdoc->save("video-sitemap.xml");
+		} else $funkdoc->load('../video-sitemap.xml');	
+		
 			if($funkdoc){
 				//get previous titles to prevent sitemap entry duplication
 				$titles=array();
