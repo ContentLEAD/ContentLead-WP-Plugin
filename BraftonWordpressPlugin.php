@@ -34,10 +34,12 @@ function debugTimer($msg = "DebugTimer")
 	$lasttime = $endtime;
 }
 
+// Attempting to write a new entry to the log file.
 function logMsg($msg)
 {
 	$msg = date("m/d/Y h:i:s A") . " - " . $msg . "\n";
 	$logLoc = logLoc();
+	//checking to see if log file exists
 	if ($logLoc == false)
 		return;
 	
@@ -45,6 +47,7 @@ function logMsg($msg)
 		echo "<span style='color:red'>There was a problem writing to the log at " . $logLoc . ", it is likely a file permissions issue.</span>";
 }
 
+//Creating a log file and return it's location URI
 function logLoc()
 {
 	if (get_option("braftonxml_log_loc") == "none")
@@ -73,6 +76,7 @@ function logLoc()
 	return $loc;
 }
 
+//Returns URI of current log file with the date 
 function clearLog()
 {
 	if (get_option("braftonxml_log_loc") == "loc")
@@ -84,6 +88,7 @@ function clearLog()
 	return false;
 }
 
+//Finding the current page URL
 function curPageURL()
 {
 	$pageURL = 'http';
@@ -111,6 +116,7 @@ function brafton_tag_delete()
 	delete_cat_tag("tag");
 }
 
+//I think this method makes sure the custom categories or tags are present in the database
 function delete_cat_tag($catortag)
 {
 	global $wpdb;
@@ -121,16 +127,24 @@ function delete_cat_tag($catortag)
 	{
 		$db = "category";
 		$input = "braftonxml_sched_cats_input";
+		//Ali
+		logMsg("category " . $catortag . " has been deleted" . $local_image_path);
 	}
 	else
 	{
 		$db = "post_tag";
 		$input = "braftonxml_sched_tags_input";
+		//Ali
+		logMsg("tag " . $catortag . " has been deleted" . $local_image_path);
 	}
-	
+	//getting a list of all the post_tags or catagories
 	$tname []= $wpdb->get_results("select wp.name from wp_terms wp, wp_term_taxonomy wpt where wp.term_id=wpt.term_id and wpt.taxonomy='$db'");
+	//logMsg(var_dump($tname));
+	//try a var dump to see what the output of $tname 
+	//
 	$brafton_table = explode(",", get_option($input));
 	$haystack = array();
+
 	for ($x = 0; $x < count($tname); $x++)
 		for ($z = 0; $z < count($tname[$x]); $z++)
 			$haystack[] = $tname[$x][$z]->name;
@@ -145,8 +159,11 @@ function delete_cat_tag($catortag)
 	
 	$string = implode(",", $brafton_table);
 	update_option($input, $string);
+
 }
 
+
+//Removing listed items from the options database table
 function braftonxml_sched_deactivate()
 {
 	delete_option("braftonxml_sched_url");
@@ -156,19 +173,26 @@ function braftonxml_sched_deactivate()
 	delete_option("braftonxml_domain");
 }
 
+// adding the function clear_crons_left to the init hook
 add_action("init", "clear_crons_left");
+
+//Unschedule braftonxml_sched_hook cron job
 function clear_crons_left()
 {
 	wp_clear_scheduled_hook("braftonxml_sched_hook");
 }
 
 /* Admin options page display function is called */
+//adding the function braftonxml_schd_add_admin_pages to the admin_menu hook
 add_action('admin_menu', 'braftonxml_sched_add_admin_pages');
+
+//Adding Brafton Settings page to the admin dashboard.
 function braftonxml_sched_add_admin_pages()
 {
 	add_options_page('Brafton Article Loader', 'Brafton Article Loader', 'update_plugins', __FILE__, 'braftonxml_sched_options_page');
 }
 
+// Getting and updating user specified options from the Brafton Menu
 /* Options sent by the options form are set here */
 /* Schedules are activated and deactivated */
 add_action('init', 'braftonxml_sched_setoptions');
@@ -236,6 +260,8 @@ function braftonxml_sched_setoptions()
 		$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
 		/* This is where the event gets unscheduled */
 		wp_unschedule_event($timestamp, "braftonxml_sched_hook", $feedSettings);
+		//Ali
+		logMsg("Importer has been unscheduled");
 	}
 	
 	if (!empty($_POST['braftonxml_sched_submit']))
@@ -246,10 +272,13 @@ function braftonxml_sched_setoptions()
 			braftonxml_clear_all_crons('braftonxml_sched_hook');
 			wp_schedule_event(time() + 3600, "hourly", "braftonxml_sched_hook", $feedSettings);
 			braftonxml_sched_trigger_schedule($feedSettings['url'], $feedSettings['API_Key']);
+			//Ali 
+			logMsg("Importer has been scheduled successfully");
 		}
 	}
 }
 
+//Method to alert admin if the importer is not enabled
 function braftonxml_admin_notice()
 {
 	$feedSettings = array(
@@ -265,9 +294,15 @@ function braftonxml_admin_notice()
 	}
 }
 
+//adding the function braftonxml_inject_opengraph_tags to the wp_head action hook
+//Ali Only - wp_head action hook is triggered within the head section of the users template 
+//by the wep_head) function.  
 add_action('wp_head', 'braftonxml_inject_opengraph_tags');
+
+//Adds opengraph tags to the  head section of 
+//the header template through the wp_head() function
 function braftonxml_inject_opengraph_tags()
-{
+{	//if we are not looking at a single post do nothing
 	if (!is_single())
 		return;
 	
@@ -289,8 +324,14 @@ function braftonxml_inject_opengraph_tags()
 	echo trim($tagsHtml);
 }
 
-// this runs last (or late) to minimize plugin conflicts
+
+//Adds braftonxml_inject_opengraph_namespaces to the languag_attributes action hook.
+//Ali Only - language_attributes are used to display the language attributes for the <html> tag.
+// This runs last (or late) to minimize plugin conflicts
 add_filter('language_attributes', 'braftonxml_inject_opengraph_namespaces', 100);
+
+// I think  Adds opengraph tags to a given Article returns an article with the 
+//correct attributes
 function braftonxml_inject_opengraph_namespaces($content)
 {
 	$namespaces = array(
@@ -305,11 +346,12 @@ function braftonxml_inject_opengraph_namespaces($content)
 	return trim($content);
 }
 
-
+//Adds the function braftonxml_admin_notice to the admin_notice action hook
+//Ali Only - admin_notices action hook are displayed near the top of admin pages
 add_action('admin_notices', 'braftonxml_admin_notice');
 
 
-
+//Used to turn off the importer by deleting all scheduled crons
 function braftonxml_clear_all_crons($hook)
 {
 	$crons = _get_cron_array();
@@ -320,10 +362,19 @@ function braftonxml_clear_all_crons($hook)
 		if (!empty($cron[$hook]))
 			unset($crons[$timestamp][$hook]);
 	_set_cron_array($crons);
+
+	//Ali
+		logMsg("Importer has been turned off");
 }
 
 /* This is the scheduling hook for our plugin that is triggered by cron */
+//adding braftonxml_sched_trigger_schedule to the braftonxm_sched_hook action hook
+//Priority is 10 by default not necessary to add it as a parameter.
+//Ali only The braftonxml_sched_trigger_schedule hooked action accepts 2 parameters $url and $API_key.
 add_action('braftonxml_sched_hook', 'braftonxml_sched_trigger_schedule', 10, 2);
+
+//I think this is used to keep track of how many times the importer has been scheduled 
+//Also used to schedule the importer
 function braftonxml_sched_trigger_schedule($url, $API_Key)
 {
 	braftonxml_sched_load_articles($url, $API_Key);
@@ -333,6 +384,7 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 	// this is fixed in wp versions >= 3.4.
 	$wpVersion = get_bloginfo('version');
 	
+	//
 	if (version_compare($wpVersion, '3.4', '<'))
 		duplicateKiller();
 }
@@ -405,8 +457,6 @@ function braftonxml_sched_options_page()
 			<div class="wrap">
 				<h1>Content Importer</h1>
 
-
-
 <?php
 	if (!function_exists('curl_init'))
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
@@ -429,6 +479,7 @@ function braftonxml_sched_options_page()
 	{
 ?>
 						<p><b>Content importer is scheduled!</b></p>
+
 						<pre>
 <?php
 		$crons = _get_cron_array();
@@ -744,7 +795,7 @@ function braftonxml_sched_options_page()
 </div>
 <?php
 }
-
+//importing video articles using the client libraries
 function braftonxml_sched_load_videos()
 {
 	// Load Brafton Videos
@@ -784,6 +835,8 @@ function braftonxml_sched_load_videos()
 	// Article Import Loop
 	foreach ($articleList->items as $article)
 	{
+
+		//I think... i have no clue what's going on here
 		if ($counter >= 4)
 			break; //load 30 articles 
 		
@@ -792,7 +845,7 @@ function braftonxml_sched_load_videos()
 		$brafton_id = $article->id;
 		
 		if (brafton_post_exists($brafton_id))
-			continue;
+			continue;		
 		
 		$counter++;
 		$ch = curl_init();
@@ -807,9 +860,12 @@ function braftonxml_sched_load_videos()
 		
 		$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 		
-		if (strpos($embedCode->embedCode, "adobe") < 30)
+
+		if (strpos($embedCode->embedCode, "adobe") < 30){
 			continue;
-		
+			//Ali
+			logMsg("video embed code: " . $embedCode . "formatted properly ");
+			}
 		//echo $embedCode->embedCode."<br><br><br>";
 		
 		$post_author = get_option("braftonxml_default_author", 1);
@@ -838,21 +894,31 @@ function braftonxml_sched_load_videos()
 		
 		$article['ID'] = $post_id;
 		$post_id = wp_insert_post($article);
+		//Ali
+		logMsg("Brafton video article successfully imported: " . $post_id);
+
 		
-		if (is_wp_error($post_id))
+		if (is_wp_error($post_id)){
 			return $post_id;
+			//Ali
+			logMsg("Brafton video article failed to import: " . $post_id);
+		}
 		
 		if (!$post_id)
 			return;
 		
 		add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>" . $embedCode->embedCode . "</div>", true);
 		add_post_meta($post_id, 'brafton_id', $brafton_id, true);
+		//Ali
+		logMsg("Brafton video article meta information added successfully: " . $post_id);
 		
 		// All-in-One SEO Plugin integration
 		if (function_exists('aioseop_get_version'))
 		{
 			add_post_meta($post_id, '_aioseop_description', $post_excerpt, true);
 			add_post_meta($post_id, '_aioseop_keywords', $keywords, true);
+			//Ali
+			logMsg("AIOSEOP SEO pluggin has added Brafton video article meta information successfully: " . $post_id);
 		}
 		
 		// Check if Yoast's Wordpress SEO plugin is active...if so, add relevant meta fields, populated by post info
@@ -860,6 +926,8 @@ function braftonxml_sched_load_videos()
 		{
 			add_post_meta($post_id, '_yoast_wpseo_title', $post_title, true);
 			add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
+			//Ali
+			logMsg("Yoasts SEO pluggin has added Brafton vdieo article meta information successfully: " . $post_id);
 		}
 		
 		$thisPhotos = $photos->ListForArticle($brafton_id, 0, 100);
@@ -892,25 +960,29 @@ function braftonxml_sched_load_videos()
 				wp_update_attachment_metadata($attach_id, $attach_data);
 				add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
 				add_post_meta($post_id, 'pic_id', $image_id, true);
+				//Ali
+				logMsg("Brafton video article image has been attached successfully " . $post_id . $local_image_path);
 			}
 		}
 		
-		logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
+		logMsg("vid article:" . $brafton_id . "->" . $post_id . " imported successfully");
 	}
 }
 
 function braftonxml_sched_load_articles($url, $API_Key)
 {
-	logMsg("Start Run");
+	logMsg("Start Run: Importer has been turned on ");
 	
 	if (get_option("braftonxml_video") == 'on')
-	{
+	{	
 		braftonxml_sched_load_videos();
+		//Ali
+		logMsg("Client videos imported successfully no articles to import");
 		die();
+
 	}
-	else if (get_option("braftonxml_video") == 'both')
+	else if (get_option("braftonxml_video") == 'both') 
 		braftonxml_sched_load_videos();
-	
 	
 	global $wpdb, $post;
 	
@@ -960,12 +1032,13 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$articleStatus = "Imported";
 		
 		if (brafton_post_exists($brafton_id))
-		{
+		{	
 			//if the post exists and article edits will automatically overwrite 
 			if (get_option("braftonxml_sched_triggercount") % 10 != 0)
 			{
 				//Every ten importer runs do not skip anything
 				$articleStatus = "Updated";
+				//Ali
 				continue;
 			}
 		}
@@ -1030,10 +1103,15 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		{
 			$master_image = image_download($upload_array, $post_image, $date, $ch);
 			$local_image_path = $master_image[0];
+			//Ali
+			//this log is useless does not mean intended log message
+			//logMsg("Image already exists." . $post_image);
 		}
 		else
 			$local_image_path = null;
-		
+		//Ali I think this is why images are not being uploaded, local_image_path should not be null here
+		//instead should be $master_image = image_download($upload_array, $post_image, $date, $ch);
+		//	$local_image_path = $master_image[0];
 		$post_id = brafton_post_exists($brafton_id);
 		$post_date;
 		$post_date_gmt;
@@ -1042,7 +1120,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$post_status = get_post_status($post_id);
 		else
 			$post_status = get_option("braftonxml_sched_status", "publish");
-		
+	
 		$guid = $API_Key;
 		$categories = array();
 		$tags_input = array();
@@ -1093,17 +1171,21 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			for ($x = 0; $x < count($cat_name); $x++)
 				for ($z = 0; $z < count($cat_name[$x]); $z++)
 					$name[] = $cat_name[$x][$z]->name;
-			
+			//I think adding article categories to the database
 			foreach ($CatColl as $c)
 				if ((in_array($c->getName(), $name)))
 					$categories[] = $wpdb->escape($c->getName());
 			$article['post_category'] = wp_create_categories($categories);
+			//Ali
+			logMsg("New article category created: " . $c . "->" . $name);
 		}
 		else if ($cat_option == 'categories' && $custom_cat[0] == "")
 		{
 			foreach ($CatColl as $c)
 				$categories[] = $wpdb->escape($c->getName());
 			$article['post_category'] = wp_create_categories($categories);
+			//Ali
+			logMsg($post_id . "article added to category: " . $c . "->" . $name); 
 		}
 		
 		// tags
@@ -1203,12 +1285,19 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		if ($post_id)
 		{
 			$article['ID'] = $post_id;
-			if (get_option("braftonxml_overwrite", "on") == 'on')
+			if (get_option("braftonxml_overwrite", "on") == 'on'){
 				wp_update_post($article);
+				logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title . " via archive upload");
+			}
 			
 			if (populate_postmeta($article_count, $post_id, $image_id))
-			{
+			{	//Ali
+				logMsg("Brafton article meta data added succesfully" . $post_id);
+				
 				$update_image = image_update($post_id, $image_id);
+				//Ali
+				logMsg( "Article image has been updated and belongs to this post:" . $post_id);
+
 				if (empty($update_image))
 				{
 					if ($local_image_path)
@@ -1221,7 +1310,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 							'post_content' => $post_image_caption,
 							'post_status' => 'inherit'
 						);
-						
+			
 						// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
 						$attach_id = wp_insert_attachment($attachment, $local_image_path, $post_id);
 						$attach_data = wp_generate_attachment_metadata($attach_id, $local_image_path);
@@ -1231,17 +1320,31 @@ function braftonxml_sched_load_articles($url, $API_Key)
 					}
 				}
 			}
+			//Ali log message wont work because you can't upload pre-existing articles via article archives
+			logMsg( "All pre-existing articles have been updated via archive upload");
 		}
 		else
 		{
 			// insert new story
 			$post_id = wp_insert_post($article);
-			if (is_wp_error($post_id))
+			if (is_wp_error($post_id)){
+				//Ali
+				logMsg($post_id . " there was an error inserting this article to the database");
 				return $post_id;
+			}
 			
-			if (!$post_id)
+			if (!$post_id){
+				//Ali
+				//If one article fails to import then does that mean the rest of the existing articles
+				//fail to import as well? Return statement in php ends the current function.
+				//http://us2.php.net/manual/en/function.return.php
+				//log message does not work when I attempt to upload an empty xml file
+				$articles_not_imported = $article_count - $counter; 
+				logMsg("The article import failed abruptly" .  $articles_not_imported . " articles were not added to the database");
 				return;
-			
+			}
+
+			//If post is successfully added to the database then proceed to add its meta information
 			add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 			
 			// castleford uses a secondary title for keyword quotas
@@ -1285,10 +1388,15 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			}
 		}
 		
-		logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
 	}
+
+	if($article_count == 0)
+		logMsg("No articles were importerted"); 
 }
 
+
+//For outdated wordpress installations to handle duplicate articles.
+//Caused by cron jobs not working properly.
 function duplicateKiller()
 {
 	global $wpdb;
@@ -1322,7 +1430,7 @@ function populate_postmeta($article_count, $post_id, $image_id)
 {
 	global $wpdb;
 	$value = get_option("braftonxml_pic_id_count");
-	
+	// I thnk make sure the article has an image before adding a custom field to a given post
 	if (!empty($value) && $value < $article_count && $value != "completed" && !empty($image_id))
 	{
 		add_post_meta($post_id, 'pic_id', $image_id, true);
@@ -1340,17 +1448,21 @@ function populate_postmeta($article_count, $post_id, $image_id)
 		add_post_meta($post_id, 'pic_id', $image_id, true);
 		return false;
 	}
-	else
+	else{
 		return true;
+		//Ali
+		logMsg( " This post:" . $post_id . " has been updated with meta data:");
+	}
 }
-
+//I think updating images to existing posts
+//Doesn't update the images in the articles 
 function image_update($id, $image_id)
 {
 	global $wpdb;
 	$query = $wpdb->prepare("SELECT meta_id FROM $wpdb->postmeta WHERE 
 		meta_key = 'pic_id' AND meta_value = '%d'", $image_id);
 	$meta_id = $wpdb->get_var($query);
-	
+
 	return $meta_id;
 }
 
@@ -1378,8 +1490,12 @@ function brafton_post_exists($brafton_id)
 	}*/
 	
 	return $post_id;
+	//Ali
+	logMsg( "This post:" . $post_id . " already exists ");
 }
 
+
+//getting when a post was last modified date.
 function brafton_post_modified($post_id)
 {
 	global $wpdb;
@@ -1387,8 +1503,12 @@ function brafton_post_modified($post_id)
 				post_id = '%d'", $post_id);
 	$post_modified = $wpdb->get_var($query);
 	return $post_modified;
+	//Ali
+	logMsg( "This post:" . $post_id . " has been modified ");
 }
 
+//returning a list of posts that have images attached to them.
+//run a var dump to check.
 function brafton_img_exists($brafton_img_id)
 {
 	global $wpdb;
@@ -1396,8 +1516,13 @@ function brafton_img_exists($brafton_img_id)
 				meta_key = 'pic_id' AND meta_value = '%d'", $brafton_img_id);
 	$post_id = $wpdb->get_var($query);
 	return $post_id;
+	//Ali 
+	//logMsg(var_dump($post_id));
+
+	logMsg( "This image:" . $brafton_img_id . " already exists ");
 }
 
+//grabbing the url of an image to identify it's location. 
 function brafton_img_location($brafton_img_post_id)
 {
 	global $wpdb;
@@ -1405,6 +1530,8 @@ function brafton_img_location($brafton_img_post_id)
 				meta_key = '_wp_attached_file' AND post_id = '%d'", $brafton_img_post_id);
 	$post_id = $wpdb->get_var($query);
 	return $post_id;
+
+	logMsg( "Image location: " . $brafton_img_post_id . " already exists ");
 }
 
 /* 
