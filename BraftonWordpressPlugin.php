@@ -232,14 +232,19 @@ function braftonxml_sched_setoptions()
 		"API_Key" => get_option("braftonxml_sched_API_KEY")
 	);
 	
-	if (!empty($_POST['braftonxml_sched_stop']))
+	if (!empty($_POST['braftonxml_sched_save']))
+	{
+		braftonxml_clear_all_crons('braftonxml_sched_hook');
+		wp_schedule_event(time() + 3600, "hourly", "braftonxml_sched_hook", $feedSettings);
+		braftonxml_sched_trigger_schedule($feedSettings['url'], $feedSettings['API_Key']);
+		
+	} else if (!empty($_POST['braftonxml_sched_stop']))
 	{
 		$timestamp = wp_next_scheduled('braftonxml_sched_hook', $feedSettings);
 		/* This is where the event gets unscheduled */
 		wp_unschedule_event($timestamp, "braftonxml_sched_hook", $feedSettings);
-	}
-	
-	if (!empty($_POST['braftonxml_sched_submit']))
+		
+	}else if (!empty($_POST['braftonxml_sched_submit']))
 	{
 		/* This is where the actual recurring event is scheduled */
 		if (!wp_next_scheduled('braftonxml_sched_hook', $feedSettings))
@@ -423,6 +428,9 @@ function braftonxml_sched_options_page()
 			.greenAwesomeButton{
 				background-color: #00BF32;
 			}
+			.blueAwesomeButton{
+				background-color: blue;
+			}
 			
 			#video-settings {
 				border: solid #E6E6E6 1px;
@@ -495,6 +503,9 @@ function braftonxml_sched_options_page()
 					<form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
 						<input type="submit" name="braftonxml_sched_stop" id="braftonxml_sched_stop" class="awesomeButton redAwesomeButton" value="Disable Importer" />
 					</form>
+					<br/>
+					<form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+						<input type="submit" name="braftonxml_sched_save" id="braftonxml_sched_save" class="awesomeButton blueAwesomeButton" value="Save Importer" />
 <?php
 		if (get_option("braftonxml_sched_triggercount") > 0)
 		{
@@ -822,7 +833,7 @@ function braftonxml_sched_load_videos()
 	
 	$article_count = count($articleList->items);
 	
-	set_magic_quotes_runtime(0);
+	//set_magic_quotes_runtime(0);
 	$counter = 0;
 	
 	$categories = $client->Categories();
@@ -993,7 +1004,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	if (get_option("braftonxml_video") == 'on')
 	{
 		braftonxml_sched_load_videos();
-		die();
+		return;
 	}
 	else if (get_option("braftonxml_video") == 'both')
 		braftonxml_sched_load_videos();
@@ -1033,7 +1044,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	$article_count = count($articles);
 	$counter = 0;
 	
-	set_magic_quotes_runtime(0);
+	//set_magic_quotes_runtime(0);
 	
 	//Article Import Loop
 	foreach ($articles as $a)
