@@ -23,7 +23,7 @@ define("CREATED_DATE", "createdDate");
 define("LAST_MODIFIED_DATE", "lastModifiedDate");
 define("EXTRACT", "extract");
 define("TEXT", "text");
-define("BY_LINE", "byLine");
+define("BY_LINE", "byline");
 define("TWEET_TEXT", "tweetText");
 define("SOURCE", "source");
 define("STATE", "state");
