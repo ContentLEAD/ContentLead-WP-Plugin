@@ -84,7 +84,7 @@ function clearLog()
 	return false;
 }
 
-function curPageURL()
+function braftonCurPageURL()
 {
 	$pageURL = 'http';
 	
@@ -286,7 +286,7 @@ function braftonxml_inject_opengraph_tags()
 	$tags = array(
 		'og:type' => 'article',
 		'og:site_name' => get_bloginfo('name'),
-		'og:url' => curPageURL(),
+		'og:url' => braftonCurPageURL(),
 		'og:title' => preg_replace('/<.*?>/', '', get_the_title()),
 		'og:description' => htmlspecialchars(preg_replace('/<.*?>/', '', get_the_excerpt())),
 		'og:image' => wp_get_attachment_url(get_post_thumbnail_id($post->ID)),
@@ -502,7 +502,7 @@ function braftonxml_sched_options_page()
 	
 	// if (!isset($_GET['showLog']) || $_GET['showLog'] == 0)
 	// {
-		// $logURL = curPageURL() . '&showLog=1';
+		// $logURL = braftonCurPageURL() . '&showLog=1';
 		// echo "<a href='" . $logURL . "'>Display Log</a>";
 		// }
 	// else
@@ -517,7 +517,7 @@ function braftonxml_sched_options_page()
 	// }
 	// if (!isset($_GET['clearLog']) || $_GET['clearLog'] == 0)
 	// {
-		// $logURL = curPageURL() . '&clearLog=1';
+		// $logURL = braftonCurPageURL() . '&clearLog=1';
 		// echo "<a href='" . $logURL . "'>Clear Log</a>";
 	// }
 	// else
