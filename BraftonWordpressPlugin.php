@@ -625,25 +625,7 @@ function braftonxml_sched_options_page()
 						<tr><td style="text-indent: 20px;"><i>Applied to no articles: </i> <input type="radio" name="braftonxml_sched_cus_cat" value="no" <?php //if (get_option("braftonxml_sched_cus_cat") == 'no') { print 'checked'; }
 ?> /></td></tr> 
 					-->				 
-				</table>
-				<br />                             
-				
-				
-				
-				<b><u>Size of photo to import</u></b><br />                                
-				<input type="radio" name="braftonxml_sched_photo" value="thumb" <?php
-		if (get_option("braftonxml_sched_photo") == 'thumb')
-		{
-			print 'checked';
-		}
-?>/> Thumbnail<br />
-				<input type="radio" name="braftonxml_sched_photo" value="large" <?php
-		if (get_option("braftonxml_sched_photo") == 'large')
-		{
-			print 'checked';
-		}
-?> /> Large<br />                           
-				
+				</table>                                            
 				<br />             
 				<br />
 
@@ -1095,7 +1077,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$post_excerpt = $a->getExtract();
 		
 		$keywords = $a->getKeywords();
-		$photo_option = get_option("braftonxml_sched_photo", 'large');
+		$photo_option = 'large';
 		$post_image = null;
 		$post_image_caption = null;
 		
@@ -1106,9 +1088,6 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		//Check if picture exists
 		if (!empty($photos))
 		{
-			if ($photo_option == 'thumb') //Thumbnail
-				$image = $photos[0]->getThumb();
-			
 			if ($photo_option == 'large') //Large photo
 				$image = $photos[0]->getLarge();
 			
