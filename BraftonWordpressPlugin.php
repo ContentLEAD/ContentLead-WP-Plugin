@@ -271,6 +271,11 @@ function braftonxml_admin_notice()
 	}
 }
 
+add_action('wp_head', 'brafton_videojs_scripts');
+function brafton_videojs_scripts(){
+	echo '<link href="//vjs.zencdn.net/4.3/video-js.css" rel="stylesheet">\n<script src="//vjs.zencdn.net/4.3/video.js"></script>';
+}
+
 add_action('wp_head', 'braftonxml_inject_opengraph_tags');
 function braftonxml_inject_opengraph_tags()
 {
