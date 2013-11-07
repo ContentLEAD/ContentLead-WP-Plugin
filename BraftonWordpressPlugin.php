@@ -784,15 +784,15 @@ function braftonxml_sched_load_videos()
 	$article_count = count($articleList->items);
 	
 	ini_set('magic_quotes_runtime', 0);
-	$counter = 0;
+	//$counter = 0;
 	
 	$categories = $client->Categories();
 	
 	// Article Import Loop
 	foreach ($articleList->items as $article)
 	{
-		if ($counter >= 4)
-			break; //load 30 articles 
+		//if ($counter >= 4)
+		//	break; //load 30 articles 
 		
 		//Extend PHP timeout limit by X seconds per article
 		set_time_limit(20);
@@ -801,7 +801,7 @@ function braftonxml_sched_load_videos()
 		if (brafton_post_exists($brafton_id))
 			continue;
 		
-		$counter++;
+		//$counter++;
 		$ch = curl_init();
 		$post_id = brafton_post_exists($brafton_id);
 		$thisArticle = $client->Articles()->Get($brafton_id);
@@ -950,19 +950,19 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	wp_create_categories($catDefs);*/
 	
 	$article_count = count($articles);
-	$counter = 0;
+	//$counter = 0;
 	
 	ini_set('magic_quotes_runtime', 0);
 	
 	//Article Import Loop
 	foreach ($articles as $a)
 	{
-		if ($counter >= 30)
-			break; // load 30 articles 
+		//if ($counter >= 30)
+		//	break; // load 30 articles 
 		// Extend PHP timeout limit by X seconds per article
 		set_time_limit(20);
 		
-		$counter++;
+		//$counter++;
 		$brafton_id = $a->getId();
 		$articleStatus = "Imported";
 		
