@@ -226,7 +226,13 @@ function braftonxml_sched_setoptions()
 	
 	if (!empty($_POST['braftonxml_videoFeedNum']))
 		update_option("braftonxml_videoFeedNum", $_POST['braftonxml_videoFeedNum']);
-	
+
+	if (!empty($_POST['brafton_video_embed']))
+		update_option("brafton_video_embed", $_POST['brafton_video_embed']);
+
+	if (!empty($_POST['brafton_atlantis_jquery']))
+		update_option("brafton_atlantis_jquery", $_POST['brafton_atlantis_jquery']);
+		
 	$feedSettings = array(
 		"url" => get_option("braftonxml_sched_url"),
 		"API_Key" => get_option("braftonxml_sched_API_KEY")
@@ -272,8 +278,18 @@ function braftonxml_admin_notice()
 }
 
 add_action('wp_head', 'brafton_videojs_scripts');
+
 function brafton_videojs_scripts(){
-	echo '<link href="//vjs.zencdn.net/4.3/video-js.css" rel="stylesheet">\n<script src="//vjs.zencdn.net/4.3/video.js"></script>';
+	$embed = get_option("brafton_video_embed");
+	
+	if($embed=="videojs"){
+		echo '<link href="//vjs.zencdn.net/4.3/video-js.css" rel="stylesheet"><script src="//vjs.zencdn.net/4.3/video.js"></script>';
+
+	}else if($embed=="atlantis"){
+		echo '<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantis.js" type="text/javascript"></script>';
+		if(get_option("brafton_atlantis_jquery")=="on") echo '<link rel="stylesheet" href="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantisjs.css" type="text/css" />';
+	}
+
 }
 
 add_action('wp_head', 'braftonxml_inject_opengraph_tags');
@@ -365,7 +381,9 @@ function braftonxml_sched_options_page()
 	add_option("braftonxml_videoPublic", "xxxxx");
 	add_option("braftonxml_videoSecret", "xxxxx");
 	add_option("braftonxml_videoFeedNum", "0");
-	
+	add_option("braftonxml_videoFeedNum", "0");
+	add_option("brafton_atlantis_jquery", "on");
+	add_option("brafton_video_embed","videojs");
 ?>
 
 			<script type="text/javascript">
@@ -773,7 +791,47 @@ function braftonxml_sched_options_page()
 				<b><u>Feed Number</u></b><br />   
 				<input type="text" name="braftonxml_videoFeedNum" value="<?php
 		echo get_option("braftonxml_videoFeedNum");
-?>" /><br />
+?>" /><br /><br />
+
+<?php $video_player = get_option('brafton_video_embed','videojs');?>
+				<b><u>Embed Player Header Script</u></b><br />   
+				<font size="-2"><i>Selecting 'Neither' will still import videojs embed code, this is just the script imports.  Turn if off for sites that already have video js script in the header.</i></font><br />
+				<input type="radio" id="embed_type" name="brafton_video_embed" value="videojs" <?php
+						if ($video_player == 'videojs')
+						{
+							print 'checked';
+						}
+				?> /> VideoJS<br />
+								<input type="radio" id="atlantis" name="brafton_video_embed" value="atlantis" <?php
+						if ($video_player == 'atlantis')
+						{
+							print 'checked';
+						}
+				?>/> Atlantis<br />
+								<input type="radio" id="neither" name="brafton_video_embed" value="off" <?php
+						if ($video_player == 'off')
+						{
+							print 'checked';
+						}
+				?>/> Neither<br />
+				
+				<br /> 
+	<?php $video_player = get_option('brafton_atlantis_jquery','on');?>
+				<b><u>Import Jquery Script?</u></b><br />        
+				<font size="-2"><i>Some sites already have jquery, set this to off if additional jquery script included with atlantisjs is causing issues.</i></font><br />
+				<input type="radio" name="brafton_atlantis_jquery" value="on" <?php
+					if (get_option("brafton_atlantis_jquery") == 'on')
+					{
+						print 'checked';
+					}
+			?> /> On<br />
+							<input type="radio" name="brafton_atlantis_jquery" value="off" <?php
+					if (get_option("brafton_atlantis_jquery") == 'off')
+					{
+						print 'checked';
+					}
+			?>/> Off<br />
+
 				</div><!--/video-settings-->
 				<br /> 
 
@@ -869,7 +927,29 @@ function braftonxml_sched_load_videos()
 		//old code
 		//$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 		
-		
+		$player = get_option("brafton_video_embed");
+		$embedCode =  "";
+
+		if ($player == "atlantis"){
+		//atlantis
+			$embedCode=<<<EOT
+                <video id='video-$brafton_id' class="ajs-default-skin atlantis-js" controls preload="none" width="$width" height='$height'
+                        poster='$presplash'>
+                        <source src="$mp4" type='video/mp4' data-resolution="480p" />
+                        <source src="$ogg" type='video/ogg' data-resolution="480p" />
+                        <source src="$flv" type='video/flash' data-resolution="480p" />
+                </video>
+                <script type="text/javascript">
+                        var atlantisVideo = AtlantisJS.Init({
+                                videos: [{
+                                        id: "video-$brafton_id"
+                                }]
+                        });
+                </script>
+EOT;
+		}
+		else{
+		//default to videojs, even if none is selected for scripts.
 		$embedCode=<<<EOT
 		<video id='video-$brafton_id' class='video-js vjs-default-skin'
 			controls preload='auto' width="$width" height='$height'
@@ -880,6 +960,8 @@ function braftonxml_sched_load_videos()
 			<source src="$flv" type='video/flash' />
 		</video>
 EOT;
+		}
+		
 		//if (strpos($embedCode->embedCode, "adobe") < 30)
 		//continue;
 		
