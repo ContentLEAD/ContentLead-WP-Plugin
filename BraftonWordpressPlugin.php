@@ -233,6 +233,9 @@ function braftonxml_sched_setoptions()
 	if (!empty($_POST['brafton_atlantis_jquery']))
 		update_option("brafton_atlantis_jquery", $_POST['brafton_atlantis_jquery']);
 		
+	if (!empty($_POST['brafton_atlantis_extra_css']))
+		update_option("brafton_atlantis_extra_css", $_POST['brafton_atlantis_extra_css']);
+		
 	$feedSettings = array(
 		"url" => get_option("braftonxml_sched_url"),
 		"API_Key" => get_option("braftonxml_sched_API_KEY")
@@ -287,7 +290,45 @@ function brafton_videojs_scripts(){
 
 	}else if($embed=="atlantis"){
 		echo '<link rel="stylesheet" href="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantisjs.css" type="text/css" /><script src="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantis.js" type="text/javascript"></script>';
+		
 		if(get_option("brafton_atlantis_jquery")=="on") echo '<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
+		
+		if(get_option("brafton_atlantis_extra_css")=="on") {
+		$css=<<<EOT
+		<style type="text/css">
+		.vjs-menu{
+		width:10em!important;
+		left:-4em!important;
+		}
+
+		.ajs-default-skin div.vjs-big-play-button span{
+		top:70%!important;
+		}
+
+		.ajs-default-skin{
+		-moz-box-shadow: 2px 2px 4px 3px #ccc;
+		-webkit-box-shadow: 2px 2px 4px 3px #ccc;
+		box-shadow: 2px 2px 4px 3px #ccc;
+		}
+
+		.ajs-call-to-action-button{
+		width:200px!important;
+		color: #58795B!important;
+		margin-left:0px!important;
+		}
+
+		.ajs-call-to-action-button a{
+		color:darkslateblue!important;
+		}
+
+		.ajs-call-to-action-button a:visited{
+		color:darkslateblue!important;
+		}
+		</style>
+EOT;
+		echo $css;
+		}	
+		
 	}
 
 }
@@ -383,6 +424,7 @@ function braftonxml_sched_options_page()
 	add_option("braftonxml_videoFeedNum", "0");
 	add_option("braftonxml_videoFeedNum", "0");
 	add_option("brafton_atlantis_jquery", "on");
+	add_option("brafton_atlantis_extra_css", "off");
 	add_option("brafton_video_embed","videojs");
 ?>
 
@@ -816,17 +858,33 @@ function braftonxml_sched_options_page()
 				?>/> Neither<br />
 				
 				<br /> 
-	<?php $video_player = get_option('brafton_atlantis_jquery','on');?>
+	<?php $video_jquery = get_option('brafton_atlantis_jquery','on');?>
 				<b><u>Import Jquery Script?</u></b><br />        
 				<font size="-2"><i>Some sites already have jquery, set this to off if additional jquery script included with atlantisjs is causing issues.</i></font><br />
 				<input type="radio" name="brafton_atlantis_jquery" value="on" <?php
-					if (get_option("brafton_atlantis_jquery") == 'on')
+					if ($video_jquery == 'on')
 					{
 						print 'checked';
 					}
 			?> /> On<br />
 							<input type="radio" name="brafton_atlantis_jquery" value="off" <?php
-					if (get_option("brafton_atlantis_jquery") == 'off')
+					if ($video_jquery == 'off')
+					{
+						print 'checked';
+					}
+			?>/> Off<br />
+
+				<?php $video_css = get_option('brafton_atlantis_extra_css','on');?>
+				<b><u>Import Extra CSS for Atlantis?</u></b><br />        
+				<font size="-2"><i>Extra CSS to fix a common issue where atlantisJS looks wonky.</i></font><br />
+				<input type="radio" name="brafton_atlantis_extra_css" value="on" <?php
+					if ($video_css == 'on')
+					{
+						print 'checked';
+					}
+			?> /> On<br />
+							<input type="radio" name="brafton_atlantis_extra_css" value="off" <?php
+					if ($video_css == 'off')
 					{
 						print 'checked';
 					}
