@@ -991,7 +991,7 @@ function braftonxml_sched_load_videos()
 		if ($player == "atlantis"){
 		//atlantis
 			$embedCode=<<<EOT
-                <video id='video-$brafton_id' class="ajs-default-skin atlantis-js" controls preload="none" width="$width" height='$height'
+                <video id='video-$brafton_id' class="ajs-default-skin atlantis-js" controls preload="auto" width="$width" height='$height'
                         poster='$presplash'>
                         <source src="$mp4" type='video/mp4' data-resolution="480p" />
                         <source src="$ogg" type='video/ogg' data-resolution="480p" />
