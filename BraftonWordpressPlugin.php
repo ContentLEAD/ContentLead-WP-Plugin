@@ -970,18 +970,48 @@ function braftonxml_sched_load_videos()
 		$presplash = $thisArticle->fields['preSplash'];
 		$postsplash = $thisArticle->fields['postSplash'];
 				
-		$videoList=$videoOutClient->ListForArticle($brafton_id,0,10);
+		$videoList=$videoOutClient->ListForArticle($braftonid,0,10);
 		$list=$videoList->items;
 		$ogg=false;
 		$mp4=false;
 		$flv=false;
+		$HDogg=false;
+		$HDmp4=false;
+		$HDflv=false;		
+
 		foreach($list as $listItem){
 			$output=$videoOutClient->Get($listItem->id);
 			//logMsg($output->path);
-			if($output->type=="htmlmp4" && !$mp4) {$mp4=$output->path; $width=$output->width; $height=$output->height;}
-			if($output->type=="htmlogg" && !$ogg) {$ogg=$output->path; $width=$output->width; $height=$output->height;}
-			if($output->type=="flash" && !$flv) {$flv=$output->path; $width=$output->width; $height=$output->height;}
-		}
+			$type = $output->type;
+			switch($type){
+				case "htmlmp4": 
+					$mp4=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "htmlogg": 
+					$ogg=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "flash": 
+					$flv=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "custom": 
+					$path = $output->path;
+					$ext = pathinfo($path, PATHINFO_EXTENSION);
+					switch($ext){
+						case "mp4": $HDmp4 = $path; break;
+						case "ogg": $HDogg = $path; break;
+						case "flv": $HDflv = $path; break;
+					}
+			}
+		}		
 		//old code
 		//$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 		
@@ -993,9 +1023,12 @@ function braftonxml_sched_load_videos()
 			$embedCode=<<<EOT
                 <video id='video-$brafton_id' class="ajs-default-skin atlantis-js" controls preload="auto" width="$width" height='$height'
                         poster='$presplash'>
-                        <source src="$mp4" type='video/mp4' data-resolution="480p" />
-                        <source src="$ogg" type='video/ogg' data-resolution="480p" />
-                        <source src="$flv" type='video/flash' data-resolution="480p" />
+                        <source src="$mp4" type='video/mp4' data-resolution="288" />
+                        <source src="$ogg" type='video/ogg' data-resolution="288" />
+                        <source src="$flv" type='video/flash' data-resolution="288" />
+                        <source src="$HDmp4" type='video/mp4' data-resolution="720p" />
+                        <source src="$HDogg" type='video/ogg' data-resolution="720p" />
+                        <source src="$HDflv" type='video/flash' data-resolution="720p" />
                 </video>
                 <script type="text/javascript">
                         var atlantisVideo = AtlantisJS.Init({
