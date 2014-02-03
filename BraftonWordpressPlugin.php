@@ -970,7 +970,7 @@ function braftonxml_sched_load_videos()
 		$presplash = $thisArticle->fields['preSplash'];
 		$postsplash = $thisArticle->fields['postSplash'];
 				
-		$videoList=$videoOutClient->ListForArticle($braftonid,0,10);
+		$videoList=$videoOutClient->ListForArticle($brafton_id,0,10);
 		$list=$videoList->items;
 		$ogg=false;
 		$mp4=false;
