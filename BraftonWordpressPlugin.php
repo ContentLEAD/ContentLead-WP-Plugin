@@ -972,8 +972,10 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			if (get_option("braftonxml_sched_triggercount") % 10 != 0)
 			{
 				//Every ten importer runs do not skip anything
+				logMsg('skipping everything');
 				$articleStatus = "Updated";
-				continue;
+				//continue;
+				logMsg('Did not get here ' );
 			}
 		}
 		
@@ -1007,39 +1009,13 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$post_image = null;
 		$post_image_caption = null;
 		
-		// Download main image to Wordpress uploads directory (faster page load times)
-		// [citation needed] -brian 2013.05.03
-		$upload_array = wp_upload_dir();
 		
-		//Check if picture exists
-		if (!empty($photos))
-		{
-			if ($photo_option == 'large') //Large photo
-				$image = $photos[0]->getLarge();
-			
-			if (!empty($image))
-			{
-				$post_image = $image->getUrl();
-				$post_image_caption = $photos[0]->getCaption();
-				$image_id = $photos[0]->getId();
-			}
-		}
-		
-		$img_exists = brafton_img_exists($image_id);
-		if($img_exists) {
-		$local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-		}else if ($post_image)
-		{
-			$master_image = image_download($upload_array, $post_image, $date, $ch);
-			$local_image_path = $master_image[0];
-		}
-		else
-			$local_image_path = null;
 		
 		$post_id = brafton_post_exists($brafton_id);
 		$post_date;
 		$post_date_gmt;
-		$post_author = apply_filters('braftonxml_author', get_option("braftonxml_default_author", 1));
+		$post_author = 1; 
+
 		if ($post_id)
 			$post_status = get_post_status($post_id);
 		else
@@ -1205,33 +1181,37 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		if ($post_id)
 		{
 			$article['ID'] = $post_id;
-			if (get_option("braftonxml_overwrite", "on") == 'on')
+			if (get_option("braftonxml_overwrite", "on") == 'on'){
 				wp_update_post($article);
-			
-			if (populate_postmeta($article_count, $post_id, $image_id))
-			{
-				$update_image = image_update($post_id, $image_id);
-				if (empty($update_image))
+				logMsg('updated the post');
+				// Download main image to Wordpress uploads directory (faster page load times)
+				// [citation needed] -brian 2013.05.03
+				$upload_array = wp_upload_dir();
+				
+				//Check if picture exists
+				if (!empty($photos))
 				{
-					if ($local_image_path)
+					if ($photo_option == 'large') //Large photo
+						$image = $photos[0]->getLarge();
+					
+					if (!empty($image))
 					{
-						$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
-						$attachment = array(
-							'post_mime_type' => $wp_filetype['type'],
-							'post_title' => $post_image_caption,
-							'post_excerpt' => $post_image_caption,
-							'post_content' => $post_image_caption,
-							'post_status' => 'inherit'
-						);
-						
-						// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
-						$attach_id = wp_insert_attachment($attachment, $local_image_path, $post_id);
-						$attach_data = wp_generate_attachment_metadata($attach_id, $local_image_path);
-						wp_update_attachment_metadata($attach_id, $attach_data);
-						update_post_meta($post_id, '_thumbnail_id', $attach_id);
-						update_post_meta($post_id, 'pic_id', $image_id);
+						$post_image = $image->getUrl();
+						$post_image_caption = $photos[0]->getCaption();
+						$image_id = $photos[0]->getId();
 					}
 				}
+				
+				
+				// if($img_exists) {
+				// $local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
+				// }else
+				if ($post_image)
+				{
+					$successful_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+					
+				}
+
 			}
 		}
 		else
@@ -1267,25 +1247,37 @@ function braftonxml_sched_load_articles($url, $API_Key)
 				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 			
-			if ($local_image_path)
+			
+		}
+
+		// Download main image to Wordpress uploads directory (faster page load times)
+		// [citation needed] -brian 2013.05.03
+		$upload_array = wp_upload_dir();
+		
+		//Check if picture exists
+		if (!empty($photos))
+		{
+			if ($photo_option == 'large') //Large photo
+				$image = $photos[0]->getLarge();
+			
+			if (!empty($image))
 			{
-				$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
-				$attachment = array(
-					'post_mime_type' => $wp_filetype['type'],
-					'post_title' => $post_image_caption,
-					'post_excerpt' => $post_image_caption,
-					'post_content' => $post_image_caption
-				);
-				
-				// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
-				$attach_id = wp_insert_attachment($attachment, $local_image_path, $post_id);
-				$attach_data = wp_generate_attachment_metadata($attach_id, $local_image_path);
-				wp_update_attachment_metadata($attach_id, $attach_data);
-				
-				add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
-				add_post_meta($post_id, 'pic_id', $image_id, true);
+				$post_image = $image->getUrl();
+				$post_image_caption = $photos[0]->getCaption();
+				$image_id = $photos[0]->getId();
 			}
 		}
+		
+		$img_exists = brafton_img_exists($image_id);
+		// if($img_exists) {
+		// $local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
+		// }else
+		if ($post_image)
+		{
+			$successful_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+			
+		}
+
 		
 		//logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
 	}
@@ -1428,44 +1420,68 @@ function brafton_img_location($brafton_img_post_id)
 }
 
 /* 
- * Download image file to upload directory using cURL
+ * Download image file to upload directory using wodrpress functions
  */
-function image_download($upload_array, $original_image_url, $date, $ch)
+function image_download( $original_image_url, $post_id, $post_desc, $brafton_id, $pic_id  )
 {
-	$year = substr($date, 0, 4);
-	$month = substr($date, 5, 2);
-	$upload_date_dir = $upload_array['basedir']; //."/".$year."/".$month;
+	// Already has a thumbnail? Do nothing
+    if (has_post_thumbnail($post_id)){
+    	logMsg('this article already has a post_thumbnail : ' . $post_id);
+     return;
+    }
+
+	if(get_option("braftonxml_domain") == 'api.brafton.com')
+	$orig_filename = str_replace("http://pictures.brafton.com/", "", $original_image_url);
+	if(get_option("braftonxml_domain") == 'api.contentlead.com')
+	$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
+	if(get_option("braftonxml_domain") == 'api.castleford.com.au')
+	$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
 	
-	/* TODO: determine if this works in majority of cases and reinstate if possible
-	if (!is_dir($upload_date_dir)) { // Makes sure an uploads directory for the current year/month exists - if not, create one
-	if (!mkdir($upload_date_dir, 0755, true)) {
-	die('Failed to create folders...');
-	}
-	}*/
+
+	// Download file to temp location and setup a fake $_FILE handler
+    // with a new name based on the slug
+    $tmp_name = download_url( $original_image_url );
+    $file_array['name'] = $orig_filename;  // new filename based on slug
+    $file_array['tmp_name'] = $tmp_name;
+
+     // If error storing temporarily, unlink
+    if ( is_wp_error( $orig_filename ) ) {
+        @unlink($file_array['tmp_name']);
+        $file_array['tmp_name'] = '';
+    }
+
+    $attachment = array(
+							'title' => $post_desc,
+							'post_excerpt' => $post_desc,
+							'caption' => $post_desc,
+							'alt' => 'inherit'
+						);
+    // validate and store the image.  
+    $attachment_id = media_handle_sideload( $file_array, $post_id, $post_desc, $attachment );
+
+
+    
+
+    //wp_update_attachment_metadata($attachment_id, $attachment);
+
+    //Set as the post attachment and add brafton meta details
+    //$local_image_path = ($upoad_date_dir . '/' . $orig_filename);
+
+    //$attachment_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );
+    
+    add_post_meta( $post_id, '_thumbnail_id', $attachment_id, true );
+    add_post_meta( $post_id, 'pic_id', $pic_id, true );
+	add_post_meta( $post_id, 'brafton_id', $brafton_id, true );
+
 	
-	$original_image_url = strtolower($original_image_url);
-	$original_image_url_split = explode('_', $original_image_url, 2);
-	$original_image_url_split[0] = substr($original_image_url_split[0], 0, 100);
-	$original_image_url_shorter = implode('_', $original_image_url_split);
-	
-	$raw_image_path = preg_replace("/.*(\/)/", "", $original_image_url_shorter);
-	$raw_image_path = preg_replace("/\+/", "_", $raw_image_path);
-	$local_image_path = ($upload_date_dir . "/" . $raw_image_path);
-	$local_image_url = ($upload_array['baseurl'] . "/" . $raw_image_path); //$date_array['2']."/".$date_array['1']."/".
-	
-	if (!file_exists($local_image_url))
-	{
-		$fp = fopen($local_image_path, 'w');
-		curl_setopt($ch, CURLOPT_URL, $original_image_url_shorter);
-		curl_setopt($ch, CURLOPT_FILE, $fp);
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_exec($ch);
-		fclose($fp);
-	}
-	
-	return array(
-		$local_image_path,
-		$local_image_url
-	);
+
+    if ( ! $attachment_id) 
+ 		{
+ 			return $attachment_id;
+		}       
+    // else
+    // 	{
+    //   		logMsg('error downloading image check these values :feed-url ' . $original_image_url . " filename: " $orig_filename);
+    //   	}
 }
 ?>
