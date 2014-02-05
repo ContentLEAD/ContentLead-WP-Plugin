@@ -972,10 +972,10 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			if (get_option("braftonxml_sched_triggercount") % 10 != 0)
 			{
 				//Every ten importer runs do not skip anything
-				logMsg('skipping everything');
+				//logMsg('skipping everything');
 				$articleStatus = "Updated";
-				//continue;
-				logMsg('Did not get here ' );
+				continue; //only executes code after ten import runs when overwrtite is turned on. Possibly important
+				//logMsg('Did not get here ' );
 			}
 		}
 		
@@ -1183,7 +1183,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$article['ID'] = $post_id;
 			if (get_option("braftonxml_overwrite", "on") == 'on'){
 				wp_update_post($article);
-				logMsg('updated the post');
+				//logMsg('updated the post');
 				// Download main image to Wordpress uploads directory (faster page load times)
 				// [citation needed] -brian 2013.05.03
 				$upload_array = wp_upload_dir();
@@ -1426,7 +1426,7 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 {
 	// Already has a thumbnail? Do nothing
     if (has_post_thumbnail($post_id)){
-    	logMsg('this article already has a post_thumbnail : ' . $post_id);
+    	//logMsg('this article already has a post_thumbnail : ' . $post_id);
      return;
     }
 
