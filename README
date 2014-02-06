@@ -1,1 +1,97 @@
-Plug-in RequirementsWordPress 2.9 or newerPHP 5.3 or newer on your hosting server, with the cURL Library and DOMXML Library Installed.Fopen() must be enabled for the blog directory if images are being provided with your content.MYSQL 5.0 database or newer[Jump to top]InstallationTo install this plug-in, log into your WordPress administration panel (generally /wp-admin) and click on the “Add New” link.Then, click on the “Upload” link and select the .zip file you downloaded. This should automatically upload and install the plug-in. You may need to activate it manually by visiting the master plug-in page and clicking “Activate” under “Brafton API Article Loader”.[Jump to top]ConfigurationClick “Brafton Article Loader” under “Settings” on your administrator sidebar.  The page below should have the following options:API DomainThe API Domain of the company providing the content.  (Brafton, Contentlead, or Castleford)API KeyThe base API key for the feed (obtained from your account manager at Brafton, Contentlead, or Castleford).  Please note your API Key is not a full web address, it is a sequence of letters and numbers and dashes.  Again, this field should not contain ‘http://www.brafton.com/’ or ‘http://www.contentlead.com/’ or ‘http://www.castleford.com.au/.’Importer will run every:Please note that our plugin now automatically schedules itself to check for new articles once every hour.  Older versions of the plugin have a field to specify how frequently it checks, and we recommend checking for new articles every 1 – 2 hours (3600 and 7200 seconds, respectively.) You can set a quicker scoop time, but we recommend one of the aforementioned settings to reduce strain on your server.Post Author:Select your Post Author if the field is present.  This will be the author of all the posts imported onto your blog from our plug-in.  If the field is not there, that means there’s only one author set up on the blog so it’s one less thing to worry about!  CategoriesIf you want categories, please select ‘Brafton Categories’ under the Categories option, otherwise select ‘None.’   The custom category field will add a specific category to every imported post until the importer is stopped.  Multiple categories can be entered, they need to be separated by commas however.Size of Photo to ImportSelect Large.  Post StatusThe Default Post Status option will indicate whether your posts are imported live, or if they come in as drafts to be published at a later date.  Important: if you desire to make edits to posts after they are imported, please see the section on ‘Include Updated Feed Content’ in the Advanced Options below.You can then click “Set Import Schedule” and WordPress will pull in your first batch of articles, as well as set our plug-in to continue checking for updates on your selected timeline.  See below to learn about the advanced importer options.[Jump to top]Advanced OptionsTo see the Advanced Options, click ‘Display Advanced Options’.  These aren’t necessary for a majority of our clients, but their explanations are below for your convenience.TagsThese options set whether your importer will add Tags to posts the same way it can add Categories.  We recommend categories here, however some clients use Tags instead, and some use both.  The options and their explanations are below:‘Brafton Categories as Tags’ - When solely using tags, select ‘Brafton Categories as Tags.’‘Brafton Keywords as Tags’ - If the keywords field is being filled, select ‘Brafton Keywords as Tags.’  ‘None’ – If tags aren’t desired, select ‘None.’  This is the default.Upload a specific Archive FeedOur feed only carries the last 30 articles Brafton has written for you.  If you switch servers or for some other reason lose your posts older than that, we can provide .xml files for you to upload using this option that will restore older posts.  If this is the case, choose the provided file then run the importer as normal, and the older posts should import. When doing this, we recommend importing older posts as drafts.  That way, it’s easier to see the ones that have imported.Include Updated Feed ContentThis option will update all posts to be exactly the same as the content on the Brafton Servers every time the plugin runs.  This option is recommended to be turned ‘Off’ if you intend to modify the contents of the posts after they are imported.  If it is set to ‘On’ and you make an update, that update will be overwritten the next time the plugin runs.  Please note this applies to adding or removing Categories and Tags for specific posts as well.Publish Date or Last Modified Date or Created DateThis option will change the date of your imported post.  The options and their explanations are below:Publish Date – The Date and Time the article in question is approved and is published to Brafton’s Feed.Last Modified Date – The Date and Time the article in question was last modified on Brafton’s Feed.Created Date – The Date and Time the article was created and submitted for approval by the client.Brafton Video IntegrationIf you’re not receiving Video Content from Brafton then Simply select Just Articles and leave the rest of this section unmodified.  Otherwise, enter your provided Public and Private Key and then select ‘Just Video’ or ‘Both Articles and Video.’  Only select Both Articles and Video if Brafton is writing articles and providing separate videos for you.  If Brafton is only providing you with Videos, then please select ‘Just Video.’You can then click “Set Import Schedule” and WordPress will pull in your first batch of articles, as well as set our plug-in to continue checking for updates on your selected timeline.[Jump to top]Image HandlingThe image handling for our plugin (since v0.8) works by downloading the photo to your uploads directory and attaching it to the newly generated post. It takes advantage of the “Post Thumbnail” functionality in WordPress 2.9+ and also automatically sets the downloaded image as “featured” in the post. To easily display the photos in your WordPress theme, we recommend following the official instructions at this link.For v0.7 and lower only: By default, our plug-in downloads any associated image with each post to your /wp-content/uploads directory and assigns the URL to your post via a custom field, “thumbnail”. We recommend using a plug-in such as “Get the Image” to handle the automation of displaying these images. If you use a custom theme on your WordPress installation, this functionality may already be built in.To change the custom field moniker used for saving images, locate this line in the plug-in file and replace the text between the single quotes:add_post_meta($post_id, 'thumbnail', $downloadedImage, true);[Jump to top]SEO ConfigurationThe plugin is compatible with both “WordPress SEO” by Yoast and the “All in one SEO pack.” With either of these, the plugin will automatically load in the meta-description and meta-keywords. Once this has been downloaded and installed, our plugin will automatically detect it’s presence and update the appropriate fields.
+Plug-in Requirements
+
+WordPress 2.9 or newer
+PHP 5.3 or newer on your hosting server, with the DOMXML Library Installed.
+MYSQL 5.0 database or newer
+[Jump to top]
+
+Installation
+
+
+To install this plug-in, log into your WordPress administration panel (generally /wp-admin) and click on the ï¿½Add Newï¿½ link.
+
+Then, click on the ï¿½Uploadï¿½ link and select the .zip file you downloaded. This should automatically upload and install the plug-in. You may need to activate it manually by visiting the master plug-in page and clicking ï¿½Activateï¿½ under ï¿½Brafton API Article Loaderï¿½.
+
+[Jump to top]
+
+Configuration
+
+
+
+Click ï¿½Brafton Article Loaderï¿½ under ï¿½Settingsï¿½ on your administrator sidebar.  The page below should have the following options:
+
+API Domain
+The API Domain of the company providing the content.  (Brafton, Contentlead, or Castleford)
+
+API Key
+The base API key for the feed (obtained from your account manager at Brafton, Contentlead, or Castleford).  Please note your API Key is not a full web address, it is a sequence of letters and numbers and dashes.  Again, this field should not contain ï¿½http://www.brafton.com/ï¿½ or ï¿½http://www.contentlead.com/ï¿½ or ï¿½http://www.castleford.com.au/.ï¿½
+
+Importer will run every:
+Please note that our plugin now automatically schedules itself to check for new articles once every hour.  Older versions of the plugin have a field to specify how frequently it checks, and we recommend checking for new articles every 1 ï¿½ 2 hours (3600 and 7200 seconds, respectively.) You can set a quicker scoop time, but we recommend one of the aforementioned settings to reduce strain on your server.
+
+Post Author:
+Select your Post Author if the field is present.  This will be the author of all the posts imported onto your blog from our plug-in.  If the field is not there, that means thereï¿½s only one author set up on the blog so itï¿½s one less thing to worry about!  
+
+Categories
+If you want categories, please select ï¿½Brafton Categoriesï¿½ under the Categories option, otherwise select ï¿½None.ï¿½   The custom category field will add a specific category to every imported post until the importer is stopped.  Multiple categories can be entered, they need to be separated by commas however.
+
+Size of Photo to Import
+Select Large.  
+
+Post Status
+The Default Post Status option will indicate whether your posts are imported live, or if they come in as drafts to be published at a later date.  Important: if you desire to make edits to posts after they are imported, please see the section on ï¿½Include Updated Feed Contentï¿½ in the Advanced Options below.
+
+You can then click ï¿½Set Import Scheduleï¿½ and WordPress will pull in your first batch of articles, as well as set our plug-in to continue checking for updates on your selected timeline.  See below to learn about the advanced importer options.
+
+[Jump to top]
+
+Advanced Options
+To see the Advanced Options, click ï¿½Display Advanced Optionsï¿½.  These arenï¿½t necessary for a majority of our clients, but their explanations are below for your convenience.
+
+Tags
+These options set whether your importer will add Tags to posts the same way it can add Categories.  We recommend categories here, however some clients use Tags instead, and some use both.  The options and their explanations are below:
+
+ï¿½Brafton Categories as Tagsï¿½ - When solely using tags, select ï¿½Brafton Categories as Tags.ï¿½
+
+ï¿½Brafton Keywords as Tagsï¿½ - If the keywords field is being filled, select ï¿½Brafton Keywords as Tags.ï¿½  
+
+ï¿½Noneï¿½ ï¿½ If tags arenï¿½t desired, select ï¿½None.ï¿½  This is the default.
+
+Upload a specific Archive Feed
+
+Our feed only carries the last 30 articles Brafton has written for you.  If you switch servers or for some other reason lose your posts older than that, we can provide .xml files for you to upload using this option that will restore older posts.  If this is the case, choose the provided file then run the importer as normal, and the older posts should import. When doing this, we recommend importing older posts as drafts.  That way, itï¿½s easier to see the ones that have imported.
+
+Include Updated Feed Content
+This option will update all posts to be exactly the same as the content on the Brafton Servers every time the plugin runs.  This option is recommended to be turned ï¿½Offï¿½ if you intend to modify the contents of the posts after they are imported.  If it is set to ï¿½Onï¿½ and you make an update, that update will be overwritten the next time the plugin runs.  Please note this applies to adding or removing Categories and Tags for specific posts as well.
+
+Publish Date or Last Modified Date or Created Date
+This option will change the date of your imported post.  The options and their explanations are below:
+
+Publish Date ï¿½ The Date and Time the article in question is approved and is published to Braftonï¿½s Feed.
+
+Last Modified Date ï¿½ The Date and Time the article in question was last modified on Braftonï¿½s Feed.
+
+Created Date ï¿½ The Date and Time the article was created and submitted for approval by the client.
+
+Brafton Video Integration
+If youï¿½re not receiving Video Content from Brafton then Simply select Just Articles and leave the rest of this section unmodified.  Otherwise, enter your provided Public and Private Key and then select ï¿½Just Videoï¿½ or ï¿½Both Articles and Video.ï¿½  Only select Both Articles and Video if Brafton is writing articles and providing separate videos for you.  If Brafton is only providing you with Videos, then please select ï¿½Just Video.ï¿½
+
+You can then click ï¿½Set Import Scheduleï¿½ and WordPress will pull in your first batch of articles, as well as set our plug-in to continue checking for updates on your selected timeline.
+
+[Jump to top]
+
+Image Handling
+
+The image handling for our plugin (since v0.8) works by downloading the photo to your uploads directory and attaching it to the newly generated post. It takes advantage of the ï¿½Post Thumbnailï¿½ functionality in WordPress 2.9+ and also automatically sets the downloaded image as ï¿½featuredï¿½ in the post. To easily display the photos in your WordPress theme, we recommend following the official instructions at this link.
+
+For v0.7 and lower only: By default, our plug-in downloads any associated image with each post to your /wp-content/uploads directory and assigns the URL to your post via a custom field, ï¿½thumbnailï¿½. We recommend using a plug-in such as ï¿½Get the Imageï¿½ to handle the automation of displaying these images. If you use a custom theme on your WordPress installation, this functionality may already be built in.
+
+To change the custom field moniker used for saving images, locate this line in the plug-in file and replace the text between the single quotes:
+
+add_post_meta($post_id, 'thumbnail', $downloadedImage, true);
+
+[Jump to top]
+
+SEO Configuration
+
+The plugin is compatible with both ï¿½WordPress SEOï¿½ by Yoast and the ï¿½All in one SEO pack.ï¿½ With either of these, the plugin will automatically load in the meta-description and meta-keywords. Once this has been downloaded and installed, our plugin will automatically detect itï¿½s presence and update the appropriate fields.
