@@ -12,6 +12,7 @@
 require_once(ABSPATH . 'wp-admin/includes/admin.php');
 require_once(ABSPATH . 'wp-includes/post.php');
 include_once 'SampleAPIClientLibrary/ApiHandler.php';
+include_once 'sitemap.php';
 
 add_action('deactivate_BraftonWordpressPlugin/BraftonWordpressPlugin.php', 'braftonxml_sched_deactivate');
 add_action('delete_term', "brafton_category_delete");
@@ -179,10 +180,8 @@ function braftonxml_sched_setoptions()
 	if (!empty($_POST['braftonxml_default_author']))
 		update_option("braftonxml_default_author", $_POST['braftonxml_default_author']);
 	
-	if (!empty($_POST['braftonxml_sched_API_KEY'])){
-		$apiKey=trim($_POST['braftonxml_sched_API_KEY']);
-		update_option("braftonxml_sched_API_KEY", $apiKey);
-	}
+	if (!empty($_POST['braftonxml_sched_API_KEY']))
+		update_option("braftonxml_sched_API_KEY", $_POST['braftonxml_sched_API_KEY']);
 	
 	if (!empty($_POST['braftonxml_domain']))
 	{
@@ -219,19 +218,24 @@ function braftonxml_sched_setoptions()
 	if (!empty($_POST['braftonxml_video']))
 		update_option("braftonxml_video", $_POST['braftonxml_video']);
 	
-	if (!empty($_POST['braftonxml_videoPublic'])){
-		$public=trim($_POST['braftonxml_videoPublic']);
-		update_option("braftonxml_videoPublic", $public);
-	}
-
-	if (!empty($_POST['braftonxml_videoSecret'])){
-		$secret=trim($_POST['braftonxml_videoSecret']);
-		update_option("braftonxml_videoSecret", $secret);
-	}
+	if (!empty($_POST['braftonxml_videoPublic']))
+		update_option("braftonxml_videoPublic", $_POST['braftonxml_videoPublic']);
+	
+	if (!empty($_POST['braftonxml_videoSecret']))
+		update_option("braftonxml_videoSecret", $_POST['braftonxml_videoSecret']);
 	
 	if (!empty($_POST['braftonxml_videoFeedNum']))
 		update_option("braftonxml_videoFeedNum", $_POST['braftonxml_videoFeedNum']);
-	
+
+	if (!empty($_POST['brafton_video_embed']))
+		update_option("brafton_video_embed", $_POST['brafton_video_embed']);
+
+	if (!empty($_POST['brafton_atlantis_jquery']))
+		update_option("brafton_atlantis_jquery", $_POST['brafton_atlantis_jquery']);
+		
+	if (!empty($_POST['brafton_atlantis_extra_css']))
+		update_option("brafton_atlantis_extra_css", $_POST['brafton_atlantis_extra_css']);
+		
 	$feedSettings = array(
 		"url" => get_option("braftonxml_sched_url"),
 		"API_Key" => get_option("braftonxml_sched_API_KEY")
@@ -274,6 +278,59 @@ function braftonxml_admin_notice()
 				<p>Article Importer not enabled.</p>
 				</div>';
 	}
+}
+
+add_action('wp_head', 'brafton_videojs_scripts');
+
+function brafton_videojs_scripts(){
+	$embed = get_option("brafton_video_embed");
+	
+	if($embed=="videojs"){
+		echo '<link href="//vjs.zencdn.net/4.3/video-js.css" rel="stylesheet"><script src="//vjs.zencdn.net/4.3/video.js"></script>';
+
+	}else if($embed=="atlantis"){
+		echo '<link rel="stylesheet" href="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantisjs.css" type="text/css" /><script src="http://p.ninjacdn.co.uk/atlantisjs/v0.11.7/atlantis.js" type="text/javascript"></script>';
+		
+		if(get_option("brafton_atlantis_jquery")=="on") echo '<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
+		
+		if(get_option("brafton_atlantis_extra_css")=="on") {
+		$css=<<<EOT
+		<style type="text/css">
+		.vjs-menu{
+		width:10em!important;
+		left:-4em!important;
+		}
+
+		.ajs-default-skin div.vjs-big-play-button span{
+		top:70%!important;
+		}
+
+		.ajs-default-skin{
+		-moz-box-shadow: 2px 2px 4px 3px #ccc;
+		-webkit-box-shadow: 2px 2px 4px 3px #ccc;
+		box-shadow: 2px 2px 4px 3px #ccc;
+		}
+
+		.ajs-call-to-action-button{
+		width:200px!important;
+		color: #58795B!important;
+		margin-left:0px!important;
+		}
+
+		.ajs-call-to-action-button a{
+		color:darkslateblue!important;
+		}
+
+		.ajs-call-to-action-button a:visited{
+		color:darkslateblue!important;
+		}
+		</style>
+EOT;
+		echo $css;
+		}	
+		
+	}
+
 }
 
 add_action('wp_head', 'braftonxml_inject_opengraph_tags');
@@ -340,8 +397,12 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 	braftonxml_sched_load_articles($url, $API_Key);
 	update_option("braftonxml_sched_triggercount", get_option("braftonxml_sched_triggercount") + 1);
 	
-	//we don't like dupes so away with them!
-	duplicateKiller();
+	// HACK: posts are duplicated due to a lack of cron lock resolution (see http://core.trac.wordpress.org/ticket/19700)
+	// this is fixed in wp versions >= 3.4.
+	$wpVersion = get_bloginfo('version');
+	
+	if (version_compare($wpVersion, '3.4', '<'))
+		duplicateKiller();
 }
 
 /* The options page display */
@@ -361,7 +422,10 @@ function braftonxml_sched_options_page()
 	add_option("braftonxml_videoPublic", "xxxxx");
 	add_option("braftonxml_videoSecret", "xxxxx");
 	add_option("braftonxml_videoFeedNum", "0");
-	
+	add_option("braftonxml_videoFeedNum", "0");
+	add_option("brafton_atlantis_jquery", "on");
+	add_option("brafton_atlantis_extra_css", "off");
+	add_option("brafton_video_embed","videojs");
 ?>
 
 			<script type="text/javascript">
@@ -373,6 +437,28 @@ function braftonxml_sched_options_page()
 				else
 					which.style.display="block";
 			}
+			
+			//function keyCheck(){
+			//	if($('input[id=just_articles]:checked')){
+			//		if(document.getElementById('brafton_api_key').value=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+			//		{
+			//			return false;
+			//		} else return true;
+			//	}else if($('input[id=just_video]:checked')){
+			//		if($('input[id=brafton_video_public]:checked').val=='xxxxx' || $('input[id=brafton_video_secret]:checked').val=='xxxxx')
+			//		{
+			//			return false;
+					// } else return true;
+				// }else{
+			//		both, check all of them
+					// if(document.getElementById('brafton_video_secret').value=='xxxxx' || 
+						// document.getElementById('brafton_video_public').value=='xxxxx' || 
+						// document.getElementById('brafton_api_key').value=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+					// {
+						// return false;
+					// } else return true;
+				// }
+			// }
 			</script>
 
 			<style>
@@ -403,13 +489,12 @@ function braftonxml_sched_options_page()
 			.redAwesomeButton{
 				background-color: #e33100;
 			}
-			
-			.blueAwesomeButton{
-				background-color: blue;
-			}
 
 			.greenAwesomeButton{
 				background-color: #00BF32;
+			}
+			.blueAwesomeButton{
+				background-color: blue;
 			}
 			
 			#video-settings {
@@ -432,8 +517,14 @@ function braftonxml_sched_options_page()
 <?php
 	if (!function_exists('curl_init'))
 		echo "<li>WARNING: <b>cURL</b> is disabled or not installed on your server. cURL is required for this plugin's operation.</li>";
-	if (!class_exists('DOMDocument'))
-		echo "<li>WARNING: DOM XML is disabled or not installed on your server.  It is required for this plugin's operation.</li>";
+	
+	$video_option=get_option("braftonxml_video");
+	
+	if (get_option("braftonxml_sched_API_KEY")=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' && $video_option!="on") 
+		echo "<span style='color:red'>Please check your API Key.</span><br/><br/>"; 
+		
+	//if (get_option("braftonxml_videoSecret")=='xxxxx' || get_option("braftonxml_videoPublic")=='xxxxx' && $video_option!="off") 
+	//	echo "<span style='color:red'>Please check your API Key.</span><br/><br/>"; 
 ?>              
 
 				<?php $wp_version=get_bloginfo('version');
@@ -467,7 +558,7 @@ function braftonxml_sched_options_page()
 				$timestamp += 60;
 				if ($timestamp < time())
 				{
-					//logMsg('It appears there is an error with the cron scheduler.  This is likely due to another of the ' . $countCron . ' plugins utilizing the Wordpress Cron Scheduler');
+					echo '<p style="color:red;">It appears there is an error with the cron scheduler.  This is likely due to another of the <b>' . $countCron . '</b> plugins utilizing the Wordpress Cron Scheduler</p>';
 					//echo $timestamp."<".time();
 				}
 			}
@@ -498,35 +589,41 @@ function braftonxml_sched_options_page()
 ?>
 
 <?php
-	//log file clear and display, commented out because of general unusefulness and issues it caused
-	
-	// if (!isset($_GET['showLog']) || $_GET['showLog'] == 0)
-	// {
-		// $logURL = braftonCurPageURL() . '&showLog=1';
-		// echo "<a href='" . $logURL . "'>Display Log</a>";
-		// }
-	// else
-	// {
-		// $filename = logLoc();
-		// $handle = fopen($filename, "r");
-		// if ($handle == false)
-			// "<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
-		// $contents = fread($handle, filesize($filename));
-		// echo "<pre>" . $contents . "</pre>";
-		// fclose($handle);
-	// }
-	// if (!isset($_GET['clearLog']) || $_GET['clearLog'] == 0)
-	// {
-		// $logURL = braftonCurPageURL() . '&clearLog=1';
-		// echo "<a href='" . $logURL . "'>Clear Log</a>";
-	// }
-	// else
-	// {
-		// $filename = logLoc();
-		// $newName = clearLog();
-		// if (rename($filename, $newName) == false)
-			// echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
-	// }
+	if (!isset($_GET['showLog']) || $_GET['showLog'] == 0)
+	{
+		$logURL = braftonCurPageURL() . '&showLog=1';
+?>
+						<a href="<?php echo $logURL; ?>">Display Log</a>
+<?php
+	}
+	else
+	{
+		$filename = logLoc();
+		$handle = fopen($filename, "r");
+		if ($handle == false)
+			"<span style='color:red'>There was a problem opening the log file, this is likely due to a file permission issue.</span>";
+		$contents = fread($handle, filesize($filename));
+		echo "<pre>" . $contents . "</pre>";
+		fclose($handle);
+	}
+?>
+
+
+<?php
+	if (!isset($_GET['clearLog']) || $_GET['clearLog'] == 0)
+	{
+		$logURL = braftonCurPageURL() . '&clearLog=1';
+?>
+							<a href="<?php echo $logURL; ?>">Clear Log</a>
+<?php
+	}
+	else
+	{
+		$filename = logLoc();
+		$newName = clearLog();
+		if (rename($filename, $newName) == false)
+			echo "<span style='color:red;'>Error clearing log file, likely permissions error.</span><br><br>";
+	}
 ?>
 <?php
 		$domain = get_option("braftonxml_domain");
@@ -554,8 +651,8 @@ function braftonxml_sched_options_page()
 
 
 
-								<input type="text" name="braftonxml_sched_API_KEY" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
-								Example: dada3480-9d3b-4989-876a-663fdbe48be8<br/>
+								<input type="text" name="braftonxml_sched_API_KEY" id="brafton_api_key" value="<?php echo get_option("braftonxml_sched_API_KEY"); ?>" /><br />
+								Example: 2de93ffd-280f-4d4b-9ace-be55db9ad4b7<br/>
 								<br/>Importer will run every hour<br />
 								
 
@@ -593,8 +690,9 @@ function braftonxml_sched_options_page()
 						<tr><td style="text-indent: 20px;"><i>Applied to no articles: </i> <input type="radio" name="braftonxml_sched_cus_cat" value="no" <?php //if (get_option("braftonxml_sched_cus_cat") == 'no') { print 'checked'; }
 ?> /></td></tr> 
 					-->				 
-				</table>
-				<br />                             
+				</table>                                            
+				<br />             
+				<br />
 
 				<b><u>Default post status</u></b><br />                     
 				<input type="radio" name="braftonxml_sched_status" value="publish" <?php
@@ -702,40 +800,96 @@ function braftonxml_sched_options_page()
 				<div id="video-settings">
 				<h3>**Please do not adjust these settings unless you are importing video.**</h3>
 				<b><u>Brafton Video Integration</u></b><br />        
-				
-				<input type="radio" name="braftonxml_video" value="on" <?php
-		if (get_option("braftonxml_video") == 'on')
+
+				<input type="radio" id="just_video" name="braftonxml_video" value="on" <?php
+		if ($video_option == 'on')
 		{
 			print 'checked';
 		}
 ?> /> Just Video<br />
-				<input type="radio" name="braftonxml_video" value="off" <?php
-		if (get_option("braftonxml_video") == 'off')
+				<input type="radio" id="just_articles" name="braftonxml_video" value="off" <?php
+		if ($video_option == 'off')
 		{
 			print 'checked';
 		}
 ?>/> Just Articles<br />
-				<input type="radio" name="braftonxml_video" value="both" <?php
-		if (get_option("braftonxml_video") == 'both')
+				<input type="radio" id="both_articles_video" name="braftonxml_video" value="both" <?php
+		if ($video_option == 'both')
 		{
 			print 'checked';
 		}
 ?>/> Both Articles and Video<br />
 				<br /> 
 				<b><u>Public Key</u></b><br />   
-				<input type="text" name="braftonxml_videoPublic" value="<?php
+				<input type="text" name="braftonxml_videoPublic" id="brafton_video_public" value="<?php
 		echo get_option("braftonxml_videoPublic");
 ?>" /><br />
 				<br /> 
 				<b><u>Private Key</u></b><br />   
-				<input type="text" name="braftonxml_videoSecret" value="<?php
+				<input type="text" name="braftonxml_videoSecret" id="brafton_video_secret" value="<?php
 		echo get_option("braftonxml_videoSecret");
 ?>" /><br />
 				<br /> 
 				<b><u>Feed Number</u></b><br />   
 				<input type="text" name="braftonxml_videoFeedNum" value="<?php
 		echo get_option("braftonxml_videoFeedNum");
-?>" /><br />
+?>" /><br /><br />
+
+<?php $video_player = get_option('brafton_video_embed','videojs');?>
+				<b><u>Embed Player Header Script</u></b><br />   
+				<font size="-2"><i>Selecting 'Neither' will still import videojs embed code, this is just the script imports.  Turn if off for sites that already have video js script in the header.</i></font><br />
+				<input type="radio" id="embed_type" name="brafton_video_embed" value="videojs" <?php
+						if ($video_player == 'videojs')
+						{
+							print 'checked';
+						}
+				?> /> VideoJS<br />
+								<input type="radio" id="atlantis" name="brafton_video_embed" value="atlantis" <?php
+						if ($video_player == 'atlantis')
+						{
+							print 'checked';
+						}
+				?>/> Atlantis<br />
+								<input type="radio" id="neither" name="brafton_video_embed" value="off" <?php
+						if ($video_player == 'off')
+						{
+							print 'checked';
+						}
+				?>/> Neither<br />
+				
+				<br /> 
+	<?php $video_jquery = get_option('brafton_atlantis_jquery','on');?>
+				<b><u>Import Jquery Script?</u></b><br />        
+				<font size="-2"><i>Some sites already have jquery, set this to off if additional jquery script included with atlantisjs is causing issues.</i></font><br />
+				<input type="radio" name="brafton_atlantis_jquery" value="on" <?php
+					if ($video_jquery == 'on')
+					{
+						print 'checked';
+					}
+			?> /> On<br />
+							<input type="radio" name="brafton_atlantis_jquery" value="off" <?php
+					if ($video_jquery == 'off')
+					{
+						print 'checked';
+					}
+			?>/> Off<br />
+
+				<?php $video_css = get_option('brafton_atlantis_extra_css','on');?>
+				<b><u>Import Extra CSS for Atlantis?</u></b><br />        
+				<font size="-2"><i>Extra CSS to fix a common issue where atlantisJS looks wonky.</i></font><br />
+				<input type="radio" name="brafton_atlantis_extra_css" value="on" <?php
+					if ($video_css == 'on')
+					{
+						print 'checked';
+					}
+			?> /> On<br />
+							<input type="radio" name="brafton_atlantis_extra_css" value="off" <?php
+					if ($video_css == 'off')
+					{
+						print 'checked';
+					}
+			?>/> Off<br />
+
 				</div><!--/video-settings-->
 				<br /> 
 
@@ -760,14 +914,13 @@ function braftonxml_sched_load_videos()
 	$publicKey = get_option("braftonxml_videoPublic");
 	$secretKey = get_option("braftonxml_videoSecret");
 	
-	if($publicKey=="xxxxx" || $secretKey=="xxxxx") return;
-	
-	
 	$baseURL = 'http://api.video.brafton.com/v2/';
-	$photoURI = "http://pictures.directnews.co.uk/v2/";
+	$photoURI = "http://pictures.video.brafton.com/v2/";
 	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
 	$photoClient = new AdferoPhotoClient($photoURI);
+	
+	$videoOutClient = $videoClient->videoOutputs();
 	
 	$feedNum = get_option("braftonxml_videoFeedNum");
 	
@@ -783,16 +936,18 @@ function braftonxml_sched_load_videos()
 	
 	$article_count = count($articleList->items);
 	
-	ini_set('magic_quotes_runtime', 0);
-	//$counter = 0;
+	//set_magic_quotes_runtime(0);
+	$counter = 0;
 	
 	$categories = $client->Categories();
+	
+	$sitemap=array();
 	
 	// Article Import Loop
 	foreach ($articleList->items as $article)
 	{
-		//if ($counter >= 4)
-		//	break; //load 30 articles 
+		if ($counter >= 4)
+			break; //load 30 articles 
 		
 		//Extend PHP timeout limit by X seconds per article
 		set_time_limit(20);
@@ -801,7 +956,7 @@ function braftonxml_sched_load_videos()
 		if (brafton_post_exists($brafton_id))
 			continue;
 		
-		//$counter++;
+		$counter++;
 		$ch = curl_init();
 		$post_id = brafton_post_exists($brafton_id);
 		$thisArticle = $client->Articles()->Get($brafton_id);
@@ -812,14 +967,98 @@ function braftonxml_sched_load_videos()
 			$category = $categories->Get($categoryId);
 		}
 		
-		$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
+		$presplash = $thisArticle->fields['preSplash'];
+		$postsplash = $thisArticle->fields['postSplash'];
+				
+		$videoList=$videoOutClient->ListForArticle($brafton_id,0,10);
+		$list=$videoList->items;
+		$ogg=false;
+		$mp4=false;
+		$flv=false;
+		$HDogg=false;
+		$HDmp4=false;
+		$HDflv=false;		
+
+		foreach($list as $listItem){
+			$output=$videoOutClient->Get($listItem->id);
+			//logMsg($output->path);
+			$type = $output->type;
+			switch($type){
+				case "htmlmp4": 
+					$mp4=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "htmlogg": 
+					$ogg=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "flash": 
+					$flv=$output->path; 
+					$width=$output->width; 
+					$height=$output->height;
+					break;
+
+				case "custom": 
+					$path = $output->path;
+					$ext = pathinfo($path, PATHINFO_EXTENSION);
+					switch($ext){
+						case "mp4": $HDmp4 = $path; break;
+						case "ogg": $HDogg = $path; break;
+						case "flv": $HDflv = $path; break;
+					}
+			}
+		}		
+		//old code
+		//$embedCode = $videoClient->VideoPlayers()->GetWithFallback($brafton_id, 'redbean', 1, 'rcflashplayer', 1);
 		
-		if (strpos($embedCode->embedCode, "adobe") < 30)
-			continue;
+		$player = get_option("brafton_video_embed");
+		$embedCode =  "";
+
+		if ($player == "atlantis"){
+		//atlantis
+			$embedCode=<<<EOT
+                <video id='video-$brafton_id' class="ajs-default-skin atlantis-js" controls preload="auto" width="$width" height='$height'
+                        poster='$presplash'>
+                        <source src="$mp4" type='video/mp4' data-resolution="288" />
+                        <source src="$ogg" type='video/ogg' data-resolution="288" />
+                        <source src="$flv" type='video/flash' data-resolution="288" />
+                        <source src="$HDmp4" type='video/mp4' data-resolution="720p" />
+                        <source src="$HDogg" type='video/ogg' data-resolution="720p" />
+                        <source src="$HDflv" type='video/flash' data-resolution="720p" />
+                </video>
+                <script type="text/javascript">
+                        var atlantisVideo = AtlantisJS.Init({
+                                videos: [{
+                                        id: "video-$brafton_id"
+                                }]
+                        });
+                </script>
+EOT;
+		}
+		else{
+		//default to videojs, even if none is selected for scripts.
+		$embedCode=<<<EOT
+		<video id='video-$brafton_id' class='video-js vjs-default-skin'
+			controls preload='auto' width="$width" height='$height'
+			poster='$presplash'
+			data-setup='{"example_option":true}'>
+			<source src="$mp4" type='video/mp4' />
+			<source src="$ogg" type='video/ogg' />
+			<source src="$flv" type='video/flash' />
+		</video>
+EOT;
+		}
+		
+		//if (strpos($embedCode->embedCode, "adobe") < 30)
+		//continue;
 		
 		//echo $embedCode->embedCode."<br><br><br>";
 		
-		$post_author = apply_filters('braftonxml_author', get_option("braftonxml_default_author", 1));
+		$post_author = get_option("braftonxml_default_author", 1);
 		
 		//$post_content = "<div id='singlePostVideo'>".$embedCode->embedCode."</div>".$thisArticle->fields['content'];
 		$post_content = $thisArticle->fields['content'];
@@ -848,11 +1087,22 @@ function braftonxml_sched_load_videos()
 		
 		if (is_wp_error($post_id))
 			return $post_id;
+		else{
+			$sitemapaddition = array(
+				"url" => get_permalink($post_id),
+				"location" => $mp4,
+				"title" => $post_title,
+				"thumbnail" => $presplash,
+				"description" =>$post_content,
+				"publication" =>$post_date,
+			);
+			$sitemap[]=$sitemapaddition;
+		}
 		
 		if (!$post_id)
 			return;
 		
-		add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>" . $embedCode->embedCode . "</div>", true);
+		add_post_meta($post_id, 'brafton_video', "<div id='singlePostVideo'>" . $embedCode . "</div>", true);
 		add_post_meta($post_id, 'brafton_id', $brafton_id, true);
 		
 		// All-in-One SEO Plugin integration
@@ -879,36 +1129,18 @@ function braftonxml_sched_load_videos()
 			
 			$photoId = $thisPhotos->items[0]->id;
 			$upload_array = wp_upload_dir();
-			$master_image = image_download($upload_array, $photoURL, $post_date, $ch);
-			$local_image_path = $master_image[0];
-			
-			if ($local_image_path)
-			{
-				$wp_filetype = wp_check_filetype(basename($local_image_path), NULL);
-				$attachment = array(
-					'post_mime_type' => $wp_filetype['type'],
-					'post_title' => $photoCaption,
-					'post_excerpt' => $photoCaption,
-					'post_content' => $photoCaption,
-					'post_status' => 'inherit'
-				);
-				
-				// Generate attachment information & set as "Featured image" (Wordpress 2.9+ feature, support must be enabled in your theme)
-				$attach_id = wp_insert_attachment($attachment, $local_image_path, $post_id);
-				$attach_data = wp_generate_attachment_metadata($attach_id, $local_image_path);
-				wp_update_attachment_metadata($attach_id, $attach_data);
-				add_post_meta($post_id, '_thumbnail_id', $attach_id, true);
-				add_post_meta($post_id, 'pic_id', $image_id, true);
-			}
+			$master_image = image_download( $photoURL, $post_id, $post_image_caption, $brafton_id, $image_id);
+		
 		}
 		
-		//logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
+		logMsg("vid:" . $brafton_id . "->" . $post_id . " success");
 	}
+	addURLs($sitemap);
 }
 
 function braftonxml_sched_load_articles($url, $API_Key)
 {
-	//logMsg("Start Run");
+	logMsg("Start Run");
 	
 	if (get_option("braftonxml_video") == 'on')
 	{
@@ -932,6 +1164,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	}
 	else
 	{
+		if($API_Key=='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx') die();
 		if (preg_match("/\.xml$/", $API_Key))
 			$articles = NewsItem::getNewsList($API_Key, 'news');
 		else
@@ -950,19 +1183,19 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	wp_create_categories($catDefs);*/
 	
 	$article_count = count($articles);
-	//$counter = 0;
+	$counter = 0;
 	
-	ini_set('magic_quotes_runtime', 0);
+	//set_magic_quotes_runtime(0);
 	
 	//Article Import Loop
 	foreach ($articles as $a)
 	{
-		//if ($counter >= 30)
-		//	break; // load 30 articles 
+		if ($counter >= 30)
+			break; // load 30 articles 
 		// Extend PHP timeout limit by X seconds per article
 		set_time_limit(20);
 		
-		//$counter++;
+		$counter++;
 		$brafton_id = $a->getId();
 		$articleStatus = "Imported";
 		
@@ -972,10 +1205,8 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			if (get_option("braftonxml_sched_triggercount") % 10 != 0)
 			{
 				//Every ten importer runs do not skip anything
-				//logMsg('skipping everything');
 				$articleStatus = "Updated";
-				continue; //only executes code after ten import runs when overwrtite is turned on. Possibly important
-				//logMsg('Did not get here ' );
+				continue;
 			}
 		}
 		
@@ -1009,13 +1240,30 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$post_image = null;
 		$post_image_caption = null;
 		
+		// Download main image to Wordpress uploads directory (faster page load times)
+		// [citation needed] -brian 2013.05.03
+		$upload_array = wp_upload_dir();
 		
+		//Check if picture exists
+		if (!empty($photos))
+		{
+			if ($photo_option == 'large') //Large photo
+				$image = $photos[0]->getLarge();
+			
+			if (!empty($image))
+			{
+				$post_image = $image->getUrl();
+				$post_image_caption = $photos[0]->getCaption();
+				$image_id = $photos[0]->getId();
+			}
+		}
+		
+
 		
 		$post_id = brafton_post_exists($brafton_id);
 		$post_date;
 		$post_date_gmt;
-		$post_author = 1; 
-
+		$post_author = get_option("braftonxml_default_author", 1);
 		if ($post_id)
 			$post_status = get_post_status($post_id);
 		else
@@ -1181,14 +1429,12 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		if ($post_id)
 		{
 			$article['ID'] = $post_id;
-			if (get_option("braftonxml_overwrite", "on") == 'on'){
+			if (get_option("braftonxml_overwrite", "on") == 'on') {
 				wp_update_post($article);
-				//logMsg('updated the post');
-				// Download main image to Wordpress uploads directory (faster page load times)
-				// [citation needed] -brian 2013.05.03
+
 				$upload_array = wp_upload_dir();
 				
-				//Check if picture exists
+				//Check if picture exists on client's feed
 				if (!empty($photos))
 				{
 					if ($photo_option == 'large') //Large photo
@@ -1202,17 +1448,15 @@ function braftonxml_sched_load_articles($url, $API_Key)
 					}
 				}
 				
-				
-				// if($img_exists) {
-				// $local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-				// }else
 				if ($post_image)
 				{
-					$successful_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+					//if image has been updated on feed download the new image.
+					$successful_image = update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
 					
 				}
 
 			}
+			
 		}
 		else
 		{
@@ -1247,39 +1491,14 @@ function braftonxml_sched_load_articles($url, $API_Key)
 				add_post_meta($post_id, '_yoast_wpseo_metadesc', $post_excerpt, true);
 			}
 			
-			
-		}
-
-		// Download main image to Wordpress uploads directory (faster page load times)
-		// [citation needed] -brian 2013.05.03
-		$upload_array = wp_upload_dir();
-		
-		//Check if picture exists
-		if (!empty($photos))
-		{
-			if ($photo_option == 'large') //Large photo
-				$image = $photos[0]->getLarge();
-			
-			if (!empty($image))
+			if ($post_image)
 			{
-				$post_image = $image->getUrl();
-				$post_image_caption = $photos[0]->getCaption();
-				$image_id = $photos[0]->getId();
+			
+				$master_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
 			}
 		}
 		
-		$img_exists = brafton_img_exists($image_id);
-		// if($img_exists) {
-		// $local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-		// }else
-		if ($post_image)
-		{
-			$successful_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
-			
-		}
-
-		
-		//logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
+		logMsg($articleStatus . " " . $brafton_id . "->" . $post_id . " : " . $post_title);
 	}
 }
 
@@ -1294,42 +1513,26 @@ function duplicateKiller()
 		//grab brafton_id of post to check for copies of
 		$braftonID = get_post_meta( $postID, 'brafton_id', true );
 		
-		//grab brafton title (double checkin')
-		$braftonTitle = get_the_title($postID);
-		
 		$i = 0;
-		
 		foreach( $braftonPosts as $innerPost )
 		{
-			//savin resources, yessah
-			if( $postID == $innerPost ) continue;
-			
-			//get brafton ID for comparison
 			$toCompare = get_post_meta($innerPost, 'brafton_id', true);
 			
-			//get title for comparison
-			$titleCompare = get_the_title($innerPost);
-			
 			//if a post is found with matching "brafton_id"s but different "post_id"s, we have a dupe!
-			if( $braftonID == $toCompare )
-			{
-				//delete $innerPost from WP database
-				wp_delete_post( $innerPost, true );
-				//...and remove from array of posts to be compared (since it no longer exists)
-				unset( $braftonPosts[$i] );
-			} else if ( $braftonTitle == $titleCompare )
+			if( $braftonID == $toCompare && $postID != $innerPost )
 			{
 				//delete $innerPost from WP database
 				wp_delete_post( $innerPost, true );
 				//...and remove from array of posts to be compared (since it no longer exists)
 				unset( $braftonPosts[$i] );
 			}
-			
 			$i++;
 		}
 	}
 }
 
+
+//Not used maybe we can delete.
 function populate_postmeta($article_count, $post_id, $image_id)
 {
 	global $wpdb;
@@ -1356,19 +1559,30 @@ function populate_postmeta($article_count, $post_id, $image_id)
 		return true;
 }
 
-function image_update($id, $image_id)
+
+//Check if feed has an updated image and download new image.
+function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id )
 {
-	global $wpdb;
-	$query = $wpdb->prepare("SELECT meta_id FROM $wpdb->postmeta WHERE 
-		meta_key = 'pic_id' AND meta_value = '%d'", $image_id);
-	$meta_id = $wpdb->get_var($query);
-	
-	return $meta_id;
+	//Grab picture Id of image on client's feed.
+	$new_image_id = get_post_meta($post_id, 'pic_id'); 
+	//compare new image id with id of image attached to existing post.
+	if($new_image_id == $image_id)
+		//if it's a match do nothing. Move on to next article/video in the loop.
+		continue; 
+	else {
+		//Remove old image if one is attached.
+		if( ! ( get_post_thumbnail($post_id) ) )
+			delete_post_thumbnail($post_id); 
+
+		$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+	}
 }
+
 
 /* 
  * Search for existing post by Brafton article ID in postmeta table 
  */
+
 function brafton_post_exists($brafton_id)
 {
 	global $wpdb;
@@ -1424,11 +1638,7 @@ function brafton_img_location($brafton_img_post_id)
  */
 function image_download( $original_image_url, $post_id, $post_desc, $brafton_id, $pic_id  )
 {
-	// Already has a thumbnail? Do nothing
-    if (has_post_thumbnail($post_id)){
-    	//logMsg('this article already has a post_thumbnail : ' . $post_id);
-     return;
-    }
+
 
 	if(get_option("braftonxml_domain") == 'api.brafton.com')
 	$orig_filename = str_replace("http://pictures.brafton.com/", "", $original_image_url);
@@ -1436,7 +1646,12 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 	$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
 	if(get_option("braftonxml_domain") == 'api.castleford.com.au')
 	$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
-	
+
+	// If post already has a thumbnail or feed does not have an updated image - Move on to the next article in the loop.
+    if (has_post_thumbnail($post_id)){
+    	logMsg('this article already has a post_thumbnail : ' . $post_id);
+     continue;
+    }
 
 	// Download file to temp location and setup a fake $_FILE handler
     // with a new name based on the slug
@@ -1462,13 +1677,6 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 
     
 
-    //wp_update_attachment_metadata($attachment_id, $attachment);
-
-    //Set as the post attachment and add brafton meta details
-    //$local_image_path = ($upoad_date_dir . '/' . $orig_filename);
-
-    //$attachment_id = wp_insert_attachment( $attachment, $local_image_path, $post_id );
-    
     add_post_meta( $post_id, '_thumbnail_id', $attachment_id, true );
     add_post_meta( $post_id, 'pic_id', $pic_id, true );
 	add_post_meta( $post_id, 'brafton_id', $brafton_id, true );
