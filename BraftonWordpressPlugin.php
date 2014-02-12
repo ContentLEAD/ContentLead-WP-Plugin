@@ -1159,7 +1159,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 	//Archive upload check
 	if ($_FILES['archive']['tmp_name'])
 	{
-		echo "Archive Option Selected<br/>";
+		
 		$articles = NewsItem::getNewsList($_FILES['archive']['tmp_name'], "html");
 	}
 	else
@@ -1431,7 +1431,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$article['ID'] = $post_id;
 			if (get_option("braftonxml_overwrite", "on") == 'on') {
 				wp_update_post($article);
-
+				echo "entering overwrite loop.";
 				$upload_array = wp_upload_dir();
 				
 				//Check if picture exists on client's feed
@@ -1450,9 +1450,10 @@ function braftonxml_sched_load_articles($url, $API_Key)
 				
 				if ($post_image)
 				{
+					
 					//if image has been updated on feed download the new image.
 					$successful_image = update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
-					
+					 
 				}
 
 			}
@@ -1562,7 +1563,8 @@ function populate_postmeta($article_count, $post_id, $image_id)
 
 //Check if feed has an updated image and download new image.
 function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id )
-{	$image_id = '12312';
+{	
+	
 	//Grab picture Id of image on client's feed.
 	$new_image_id = get_post_meta($post_id, 'pic_id'); 
 	//Make sure the article to update doesn't already have an image	
@@ -1570,10 +1572,11 @@ function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, 
 			//if there's already an image attached  and the image is the same as the image on client's feed. Do nothing.
 		if($new_image_id == $image_id)
 			return; 
-	}
 
-	//Remove old image if one is attached.
-	delete_post_thumbnail($post_id); 
+		
+		//Remove old image if one is attached.
+		delete_post_thumbnail($post_id); 
+	}
 
 	$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
 
