@@ -340,8 +340,12 @@ function braftonxml_sched_trigger_schedule($url, $API_Key)
 	braftonxml_sched_load_articles($url, $API_Key);
 	update_option("braftonxml_sched_triggercount", get_option("braftonxml_sched_triggercount") + 1);
 	
-	//we don't like dupes so away with them!
-	duplicateKiller();
+	// HACK: posts are duplicated due to a lack of cron lock resolution (see http://core.trac.wordpress.org/ticket/19700)
+	// this is fixed in wp versions >= 3.4.
+	$wpVersion = get_bloginfo('version');
+	
+	if (version_compare($wpVersion, '3.4', '<'))
+		duplicateKiller();
 }
 
 /* The options page display */
