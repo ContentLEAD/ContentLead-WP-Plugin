@@ -1562,22 +1562,36 @@ function populate_postmeta($article_count, $post_id, $image_id)
 
 //Check if feed has an updated image and download new image.
 function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id )
-{
+{	$image_id = '12312';
 	//Grab picture Id of image on client's feed.
 	$new_image_id = get_post_meta($post_id, 'pic_id'); 
-	//compare new image id with id of image attached to existing post.
-	if($new_image_id == $image_id)
-		//if it's a match do nothing. Move on to next article/video in the loop.
-		continue; 
-	else {
-		//Remove old image if one is attached.
-		if( ! ( get_post_thumbnail($post_id) ) )
-			delete_post_thumbnail($post_id); 
-
-		$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+	//Make sure the article to update doesn't already have an image	
+	if( ! ( get_the_post_thumbnail($post_id))){
+			//if there's already an image attached  and the image is the same as the image on client's feed. Do nothing.
+		if($new_image_id == $image_id)
+			return; 
 	}
+
+	//Remove old image if one is attached.
+	delete_post_thumbnail($post_id); 
+
+	$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
+
+	
 }
 
+
+// Ali - removed image_update function. It  added unnecessary calls to the database. Replaced it with a more intuitive
+		//function that does more than return a post's picture id meta value
+// function image_update($id, $image_id)
+// {
+// 	global $wpdb;
+// 	$query = $wpdb->prepare("SELECT meta_id FROM $wpdb->postmeta WHERE 
+// 		meta_key = 'pic_id' AND meta_value = '%d'", $image_id);
+// 	$meta_id = $wpdb->get_var($query);
+	
+// 	return $meta_id;
+// }
 
 /* 
  * Search for existing post by Brafton article ID in postmeta table 
@@ -1650,7 +1664,7 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 	// If post already has a thumbnail or feed does not have an updated image - Move on to the next article in the loop.
     if (has_post_thumbnail($post_id)){
     	logMsg('this article already has a post_thumbnail : ' . $post_id);
-     continue;
+     return;
     }
 
 	// Download file to temp location and setup a fake $_FILE handler
