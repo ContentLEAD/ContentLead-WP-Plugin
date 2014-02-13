@@ -1529,35 +1529,6 @@ function duplicateKiller()
 	}
 }
 
-
-//Not used maybe we can delete.
-function populate_postmeta($article_count, $post_id, $image_id)
-{
-	global $wpdb;
-	$value = get_option("braftonxml_pic_id_count");
-	
-	if (!empty($value) && $value < $article_count && $value != "completed" && !empty($image_id))
-	{
-		add_post_meta($post_id, 'pic_id', $image_id, true);
-		$value++;
-		update_option("braftonxml_pic_id_count", $value);
-		
-		if ($value == $article_count || $value == 31)
-			update_option("braftonxml_pic_id_count", "completed");
-		
-		return false;
-	}
-	else if (empty($value) && !empty($image_id))
-	{
-		update_option("braftonxml_pic_id_count", 1);
-		add_post_meta($post_id, 'pic_id', $image_id, true);
-		return false;
-	}
-	else
-		return true;
-}
-
-
 //Check if feed has an updated image and download new image.
 function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id )
 {	
@@ -1598,33 +1569,6 @@ function brafton_post_exists($brafton_id)
 	$wpdb->query("DELETE FROM $wpdb->posts WHERE post_type = 'revision' AND ID=".$post_id);
 	}*/
 	
-	return $post_id;
-}
-
-function brafton_post_modified($post_id)
-{
-	global $wpdb;
-	$query = $wpdb->prepare("SELECT post_modified FROM $wpdb->posts WHERE 
-				post_id = '%d'", $post_id);
-	$post_modified = $wpdb->get_var($query);
-	return $post_modified;
-}
-
-function brafton_img_exists($brafton_img_id)
-{
-	global $wpdb;
-	$query = $wpdb->prepare("SELECT post_id FROM $wpdb->postmeta WHERE 
-				meta_key = 'pic_id' AND meta_value = '%d'", $brafton_img_id);
-	$post_id = $wpdb->get_var($query);
-	return $post_id;
-}
-
-function brafton_img_location($brafton_img_post_id)
-{
-	global $wpdb;
-	$query = $wpdb->prepare("SELECT meta_value FROM $wpdb->postmeta WHERE 
-				meta_key = '_wp_attached_file' AND post_id = '%d'", $brafton_img_post_id);
-	$post_id = $wpdb->get_var($query);
 	return $post_id;
 }
 
