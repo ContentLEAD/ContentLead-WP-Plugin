@@ -952,13 +952,14 @@ function braftonxml_sched_load_videos()
 		//Extend PHP timeout limit by X seconds per article
 		set_time_limit(20);
 		$brafton_id = $article->id;
+		$post_id = brafton_post_exists($brafton_id);
 		
-		if (brafton_post_exists($brafton_id))
+		if ( $post_id )
 			continue;
 		
 		$counter++;
 		$ch = curl_init();
-		$post_id = brafton_post_exists($brafton_id);
+		
 		$thisArticle = $client->Articles()->Get($brafton_id);
 		
 		if ($categories->ListForArticle($brafton_id, 0, 100)->items['totalCount'])
@@ -1197,8 +1198,8 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$counter++;
 		$brafton_id = $a->getId();
 		$articleStatus = "Imported";
-		
-		if (brafton_post_exists($brafton_id))
+		$post_id = brafton_post_exists($brafton_id;
+		if ( $post_id )
 		{
 			//if the post exists and article edits will automatically overwrite 
 			if (get_option("braftonxml_sched_triggercount") % 10 != 0)
@@ -1258,7 +1259,6 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		
 
 		
-		$post_id = brafton_post_exists($brafton_id);
 		$post_date;
 		$post_date_gmt;
 		$post_author = get_option("braftonxml_default_author", 1);
@@ -1532,18 +1532,16 @@ function duplicateKiller()
 //Check if feed has an updated image and download new image.
 function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id )
 {	
-	
-	//Grab picture Id of image on client's feed.
+	//Grab pic_id of given post.
 	$new_image_id = get_post_meta($post_id, 'pic_id'); 
 	//Make sure the article to update doesn't already have an image	
 	if( ! ( get_the_post_thumbnail($post_id))){
-		//if there's already an image attached  and the image is the same as the image on client's feed. Do nothing.
+		//if there's already an image attached and the image is the same as the image on client's feed. Do nothing.
 		if($new_image_id == $image_id)
 			return; 
 
-		
-		//Remove old image if one is attached.
-		delete_post_thumbnail($post_id); 
+	//Detach old image if one is attached.
+	delete_post_thumbnail($post_id); 
 	}
 
 	$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
