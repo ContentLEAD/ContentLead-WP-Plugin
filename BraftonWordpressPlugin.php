@@ -3,7 +3,7 @@
 	Plugin Name: Brafton API Article Loader
 	Plugin URI: http://www.brafton.com/support/wordpress
 	Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-	Version: 1.0
+	Version: 1.1
 	Author: Brafton, Inc.
 	Author URI: http://brafton.com/support/wordpress
 */
