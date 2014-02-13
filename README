@@ -1,3 +1,15 @@
+=== ContentLead-WP-Plugin ===
+
+Contributors: Brafton Inc.
+Tags: ContentLEAD, Brafton, Castleford
+Requires at least: 2.9
+Tested up to: 3.8
+Stable tag: 1.0
+
+~Current Version:1.0~
+
+
+
 Plug-in Requirements
 
 WordPress 2.9 or newer
@@ -95,3 +107,7 @@ add_post_meta($post_id, 'thumbnail', $downloadedImage, true);
 SEO Configuration
 
 The plugin is compatible with both �WordPress SEO� by Yoast and the �All in one SEO pack.� With either of these, the plugin will automatically load in the meta-description and meta-keywords. Once this has been downloaded and installed, our plugin will automatically detect it�s presence and update the appropriate fields.
+
+Updates
+
+We handle plug-in updates using github updater plugin by jkudish. If your version of the Brafton plugin is out of sync with this repositroy you will see a notification on your WordPress admin dashpanel's updates tab. Check it frequently to ensure you are running the latest version of our importer. Updating your plugin will replace your current version of the Brafton Plugin with the master branch on github.
