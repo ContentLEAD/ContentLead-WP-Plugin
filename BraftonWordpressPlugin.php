@@ -1580,7 +1580,7 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 	if(get_option("braftonxml_domain") == 'api.contentlead.com')
 		$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
 	if(get_option("braftonxml_domain") == 'api.castleford.com.au')
-		$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
+		$orig_filename = str_replace("http://pictures.castleford.com.au/", "", $original_image_url);
 
 	// If post already has a thumbnail or feed does not have an updated image - Move on to the next article in the loop.
     if (has_post_thumbnail($post_id)){
