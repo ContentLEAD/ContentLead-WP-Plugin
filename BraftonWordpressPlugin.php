@@ -1224,7 +1224,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		$counter++;
 		$brafton_id = $a->getId();
 		$articleStatus = "Imported";
-		$post_id = brafton_post_exists($brafton_id;
+		$post_id = brafton_post_exists($brafton_id);
 		if ( $post_id )
 		{
 			//if the post exists and article edits will automatically overwrite 
