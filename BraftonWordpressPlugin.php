@@ -1128,7 +1128,6 @@ EOT;
 			$photoCaption = $photos->Get($thisPhotos->items[0]->id)->fields['caption'];
 			
 			$photoId = $thisPhotos->items[0]->id;
-			$upload_array = wp_upload_dir();
 			$master_image = image_download( $photoURL, $post_id, $post_image_caption, $brafton_id, $image_id);
 		
 		}
@@ -1242,7 +1241,6 @@ function braftonxml_sched_load_articles($url, $API_Key)
 		
 		// Download main image to Wordpress uploads directory (faster page load times)
 		// [citation needed] -brian 2013.05.03
-		$upload_array = wp_upload_dir();
 		
 		//Check if picture exists
 		if (!empty($photos))
@@ -1431,8 +1429,7 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			$article['ID'] = $post_id;
 			if (get_option("braftonxml_overwrite", "on") == 'on') {
 				wp_update_post($article);
-				echo "entering overwrite loop.";
-				$upload_array = wp_upload_dir();
+
 				
 				//Check if picture exists on client's feed
 				if (!empty($photos))
@@ -1569,7 +1566,7 @@ function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, 
 	$new_image_id = get_post_meta($post_id, 'pic_id'); 
 	//Make sure the article to update doesn't already have an image	
 	if( ! ( get_the_post_thumbnail($post_id))){
-			//if there's already an image attached  and the image is the same as the image on client's feed. Do nothing.
+		//if there's already an image attached  and the image is the same as the image on client's feed. Do nothing.
 		if($new_image_id == $image_id)
 			return; 
 
@@ -1579,26 +1576,7 @@ function update_image( $post_image, $post_id, $post_image_caption, $brafton_id, 
 	}
 
 	$new_image = image_download( $post_image, $post_id, $post_image_caption, $brafton_id, $image_id);
-
-	
 }
-
-
-// Ali - removed image_update function. It  added unnecessary calls to the database. Replaced it with a more intuitive
-		//function that does more than return a post's picture id meta value
-// function image_update($id, $image_id)
-// {
-// 	global $wpdb;
-// 	$query = $wpdb->prepare("SELECT meta_id FROM $wpdb->postmeta WHERE 
-// 		meta_key = 'pic_id' AND meta_value = '%d'", $image_id);
-// 	$meta_id = $wpdb->get_var($query);
-	
-// 	return $meta_id;
-// }
-
-/* 
- * Search for existing post by Brafton article ID in postmeta table 
- */
 
 function brafton_post_exists($brafton_id)
 {
@@ -1651,18 +1629,16 @@ function brafton_img_location($brafton_img_post_id)
 }
 
 /* 
- * Download image file to upload directory using wodrpress functions
+ * Download image file to upload directory using WordPress functions
  */
 function image_download( $original_image_url, $post_id, $post_desc, $brafton_id, $pic_id  )
 {
-
-
 	if(get_option("braftonxml_domain") == 'api.brafton.com')
-	$orig_filename = str_replace("http://pictures.brafton.com/", "", $original_image_url);
+		$orig_filename = str_replace("http://pictures.brafton.com/", "", $original_image_url);
 	if(get_option("braftonxml_domain") == 'api.contentlead.com')
-	$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
+		$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
 	if(get_option("braftonxml_domain") == 'api.castleford.com.au')
-	$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
+		$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
 
 	// If post already has a thumbnail or feed does not have an updated image - Move on to the next article in the loop.
     if (has_post_thumbnail($post_id)){
@@ -1691,22 +1667,10 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
     // validate and store the image.  
     $attachment_id = media_handle_sideload( $file_array, $post_id, $post_desc, $attachment );
 
-
-    
-
     add_post_meta( $post_id, '_thumbnail_id', $attachment_id, true );
     add_post_meta( $post_id, 'pic_id', $pic_id, true );
 	add_post_meta( $post_id, 'brafton_id', $brafton_id, true );
 
-	
-
-    if ( ! $attachment_id) 
- 		{
- 			return $attachment_id;
-		}       
-    // else
-    // 	{
-    //   		logMsg('error downloading image check these values :feed-url ' . $original_image_url . " filename: " $orig_filename);
-    //   	}
+ 	return $attachment_id;
 }
 ?>
