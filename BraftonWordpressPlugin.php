@@ -3,10 +3,36 @@
 	Plugin Name: Brafton API Article Loader
 	Plugin URI: http://www.brafton.com/support/wordpress
 	Description: A Wordpress 2.9+ plugin designed to download articles from Brafton's API and store them locally, along with attached media.
-	Version: 1.3.4
+	Version: 1.0
 	Author: Brafton, Inc.
 	Author URI: http://brafton.com/support/wordpress
 */
+
+function brafton_plugin_github_updater(){
+
+/* includes the update from Github code */
+  require_once( plugin_dir_path( __FILE__ ) . '/updater.php' );
+
+  define('WP_GITHUB_FORCE_UPDATE', true);
+
+  if (is_admin()) { // note the use of is_admin() to double check that this is happening in the admin
+      $config = array(
+          'slug' => plugin_basename(__FILE__), // this is the slug of your plugin
+          'proper_folder_name' => 'ContentLead-WP-Plugin-fixed-images', // this is the name of the folder your plugin lives in
+          'api_url' => 'https://api.github.com/repos/ContentLEAD/ContentLead-WP-Plugin', // the github API url of your github repo
+          'raw_url' => 'https://github.com/ContentLEAD/ContentLead-WP-Plugin/tree/fixed-images', // the github raw url of your github repo
+          'github_url' => 'https://github.com/ContentLEAD/ContentLead-WP-Plugin', // the github url of your github repo
+          'zip_url' => 'https://github.com/ContentLEAD/ContentLead-WP-Plugin/zipball/fixed-images', // the zip url of the github repo
+          'sslverify' => true, // wether WP should check the validity of the SSL cert when getting an update, see https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/2 and https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/4 for details
+          'requires' => '2.9', // which version of WordPress does your plugin require?
+          'tested' => '3.8', // which version of WordPress is your plugin tested up to?
+          'readme' => 'readme.txt' // which file to use as the readme for the version number
+      );
+      new WPGitHubUpdater($config);
+  }
+}
+add_action( 'init', 'brafton_plugin_github_updater' );
+
 
 /* options are deleted in case of plugin deactivation */
 require_once(ABSPATH . 'wp-admin/includes/admin.php');
@@ -1580,7 +1606,7 @@ function image_download( $original_image_url, $post_id, $post_desc, $brafton_id,
 	if(get_option("braftonxml_domain") == 'api.contentlead.com')
 		$orig_filename = str_replace("http://pictures.contentlead.com/", "", $original_image_url);
 	if(get_option("braftonxml_domain") == 'api.castleford.com.au')
-		$orig_filename = str_replace("http://pictures.castleford.com.au/", "", $original_image_url);
+		$orig_filename = str_replace("http://pictures.castleford.com.au/liveimages/", "", $original_image_url);
 
 	// If post already has a thumbnail or feed does not have an updated image - Move on to the next article in the loop.
     if (has_post_thumbnail($post_id)){
