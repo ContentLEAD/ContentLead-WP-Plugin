@@ -26,7 +26,7 @@ function brafton_plugin_github_updater(){
           'sslverify' => true, // wether WP should check the validity of the SSL cert when getting an update, see https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/2 and https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/4 for details
           'requires' => '2.9', // which version of WordPress does your plugin require?
           'tested' => '3.8', // which version of WordPress is your plugin tested up to?
-          'readme' => 'README.txt' // which file to use as the readme for the version number
+          'readme' => 'README' // which file to use as the readme for the version number
       	  'access_token' => '' // Not a private repository
       );
       new WP_GitHub_Updater($config);
