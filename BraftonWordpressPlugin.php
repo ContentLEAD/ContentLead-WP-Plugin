@@ -17,6 +17,7 @@ function brafton_plugin_github_updater(){
   define('WP_GITHUB_FORCE_UPDATE', true);
 
   if (is_admin()) { // note the use of is_admin() to double check that this is happening in the admin
+      
       $config = array(
           'slug' => plugin_basename(__FILE__), // this is the slug of your plugin
           'proper_folder_name' => 'ContentLead-WP-Plugin-fixed-images', // this is the name of the folder your plugin lives in
@@ -30,8 +31,10 @@ function brafton_plugin_github_updater(){
           'readme' => 'README' // which file to use as the readme for the version number
       	  'access_token' => '' // Not a private repository
       );
+
       new WP_GitHub_Updater($config);
   }
+  
 }
 
 
