@@ -7,6 +7,8 @@
 	Author: Brafton, Inc.
 	Author URI: http://brafton.com/support/wordpress
 */
+
+//test
 add_action( 'init', 'brafton_plugin_github_updater' );
 
 function brafton_plugin_github_updater(){
