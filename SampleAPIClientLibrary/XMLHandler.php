@@ -10,9 +10,10 @@ class XMLHandler {
 	/** @var Document */
 	private $doc;
 
-  static $ch;
-  
-	/**
+  	static $ch;
+	
+
+		/**
 	 * @param String $url
 	 * @return XMLHandler
 	 */
@@ -21,14 +22,17 @@ class XMLHandler {
       $url = 'file://' . $url;
     }
 
-		 $this->doc = new DOMDocument();
-    if(!isset($ch)){
-      $ch = curl_init();
-    }
-    curl_setopt ($ch, CURLOPT_URL, $url);
-    curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, 60);
-    $feed_string = curl_exec($ch);
+	$this->doc = new DOMDocument();
+    
+    //load wp_http class   
+	if( !class_exists( 'WP_Http' ) )
+	  	include_once( ABSPATH . WPINC . '/class-http.php' );
+
+    $request = new WP_Http; 
+    $result = $request->request( $url );
+
+    $feed_string = $result['body'];
+
     
 		if(!$this->doc->loadXML($feed_string)) {
 			echo $url."<br>";
