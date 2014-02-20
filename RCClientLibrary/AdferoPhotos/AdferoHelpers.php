@@ -22,10 +22,15 @@ class AdferoHelpers {
      * @return string 
      */
     public function GetRawResponse($uri) {
-        $ch = curl_init($uri);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        return (string) curl_exec($ch);
+        //load wp_http class   
+    if( !class_exists( 'WP_Http' ) )
+        include_once( ABSPATH . WPINC . '/class-http.php' );
+
+    $request = new WP_Http; 
+    $result = $request->request( $uri );
+
+    
+        return (string) $result['body'];
     }
 
 }
