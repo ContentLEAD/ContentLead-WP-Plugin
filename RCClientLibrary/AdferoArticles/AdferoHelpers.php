@@ -12,8 +12,14 @@ class AdferoHelpers {
      * @return string 
      */
     public static function GetXMLFromUri($uri) {
-        $xml = simplexml_load_file($uri);
-        return $xml->asXML();
+        $ch = curl_init();
+       $timeout = 5;
+       curl_setopt($ch, CURLOPT_URL, $uri);
+       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+       $data = curl_exec($ch);
+       curl_close($ch);
+       return $data;
     }
 
     /**
