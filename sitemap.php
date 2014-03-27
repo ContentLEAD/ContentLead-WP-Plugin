@@ -11,16 +11,18 @@
 	//
 	//some things about this script are wordpress specific, such as where the sitemap is being written.
 	
+
 	function addURLs($sitemaps){
 	//accepts array of sitemaps
+		if(empty($sitemaps)) return;
 		$funkdoc = new DOMDocument();
 		//like funcdoc, but redman
-		if(!file_exists('../video-sitemap.xml')){
+		if(!file_exists(ABSPATH . 'video-sitemap.xml')){
 			$newurlset = $funkdoc ->createElementNS('http://www.sitemaps.org/schemas/sitemap/0.9','urlset','');
 			$funkdoc -> appendChild($newurlset);
 			$newurlset->setAttributeNS('http://www.w3.org/2000/xmlns/' ,'xmlns:video', 'http://www.google.com/schemas/sitemap-video/1.1');
-			$funkdoc->save("video-sitemap.xml");
-		} else $funkdoc->load('../video-sitemap.xml');	
+			$funkdoc->save(ABSPATH . 'video-sitemap.xml');
+		} else $funkdoc->load(ABSPATH . 'video-sitemap.xml');	
 		
 			if($funkdoc){
 				//get previous titles to prevent sitemap entry duplication
@@ -128,7 +130,7 @@
 						$linebreak = $funkdoc ->createTextNode ("\n");
 						$urltag -> appendChild($linebreak);
 				}	
-					$test = $funkdoc->save("../video-sitemap.xml");
+					$test = $funkdoc->save(ABSPATH . 'video-sitemap.xml');
 			}
 		}
 	}
