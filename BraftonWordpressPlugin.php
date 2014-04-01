@@ -1069,7 +1069,7 @@ EOT;
 		
 		$post_status = get_option("braftonxml_sched_status", "publish");
 		
-		$post_date = $thisArticle->fields['lastModifiedDate'];
+		$post_date = $thisArticle->fields['date'];
 		
 		$article = compact('post_author', 'post_date', 'post_date_gmt', 'post_content', 'post_title', 'post_status', 'post_excerpt');
 		
