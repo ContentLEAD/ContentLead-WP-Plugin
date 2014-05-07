@@ -1029,10 +1029,13 @@ function braftonxml_sched_load_articles($url, $API_Key)
 			}
 		}
 		
-		$img_exists = brafton_img_exists($image_id);
-		if($img_exists) {
-		$local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
-		}else if ($post_image)
+		// Download Duplicate Images anyway -Ali 5-7-2014
+		// $img_exists = brafton_img_exists($image_id);
+		// if($img_exists) {
+		// $local_image_path = $upload_array['baseurl'].brafton_img_location($img_exists);
+		// }else
+		
+		if ($post_image)
 		{
 			$master_image = image_download($upload_array, $post_image, $date, $ch);
 			$local_image_path = $master_image[0];
