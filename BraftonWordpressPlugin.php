@@ -767,8 +767,8 @@ function braftonxml_sched_load_videos()
 	if($publicKey=="xxxxx" || $secretKey=="xxxxx") return;
 	
 	
-	$baseURL = 'http://api.video.brafton.com/v2/';
-	$photoURI = "http://pictures.directnews.co.uk/v2/";
+	$baseURL = 'http://livevideo.api.brafton.com/v2/';
+	$photoURI = "http://pictures.brafton.com/v2/";
 	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
 	$photoClient = new AdferoPhotoClient($photoURI);
