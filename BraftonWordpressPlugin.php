@@ -914,7 +914,7 @@ function braftonxml_sched_load_videos()
 	$publicKey = get_option("braftonxml_videoPublic");
 	$secretKey = get_option("braftonxml_videoSecret");
 	
-	$baseURL = 'hhttp://livevideo.api.brafton.com/v2/';
+	$baseURL = 'http://livevideo.api.brafton.com/v2/';
 	$photoURI = "http://pictures.brafton.com/v2/";
 	$videoClient = new AdferoVideoClient($baseURL, $publicKey, $secretKey);
 	$client = new AdferoClient($baseURL, $publicKey, $secretKey);
